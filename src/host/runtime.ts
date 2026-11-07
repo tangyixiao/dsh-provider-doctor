@@ -11,7 +11,7 @@
  * @module dsh-provider-doctor/host/runtime
  */
 
-import { readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
@@ -73,6 +73,16 @@ export interface ProfileFacts {
   source: ProfileResolution
   /** Whether the name was read directly, inferred, or is unavailable. */
   evidence: EvidenceKind
+  /**
+   * A profile name that an environment variable asserted but that does not
+   * exist under `profiles/`.
+   *
+   * DSH exports `DSH_PROFILE` into every model shell call, so a host started
+   * from such a shell inherits the *parent's* profile name. Trusting it would
+   * make the doctor report a profile that is not running — a confident,
+   * fabricated answer — so the value is dropped and only recorded here.
+   */
+  ignoredEnvProfile?: string
 }
 
 /** The directory name DSH puts profiles under. */
@@ -200,25 +210,41 @@ export function discoverProfile(
   const argv = options?.argv ?? process.argv
   const candidates = listProfileCandidates(dshHome)
 
+  // An injected name is the caller asserting a fact, not the ambient shell
+  // claiming one, so it is taken at face value.
   const injected = interpretProfileValue(injectedName, dshHome)
   if (injected !== undefined) {
     return makeProfileFacts(injected.name, injected.dir, candidates, 'injected', 'observed')
   }
 
+  // Ambient values are only trusted when the directory they name exists. A
+  // host launched from a model shell inherits that shell's `DSH_PROFILE`,
+  // which names a profile of the *parent* process; believing it produced a
+  // `desktop` profile that was neither running nor present on disk.
   const fromEnv = profileFromEnvironment(env, dshHome)
-  if (fromEnv !== undefined) {
-    return makeProfileFacts(fromEnv.name, fromEnv.dir, candidates, 'env', 'observed')
+  const acceptedFromEnv = fromEnv === undefined ? undefined : acceptedProfileDir(fromEnv, candidates)
+  if (acceptedFromEnv !== undefined) {
+    return makeProfileFacts(acceptedFromEnv.name, acceptedFromEnv.dir, candidates, 'env', 'observed')
   }
 
-  const fromArgv = interpretProfileValue(readProfileArg(argv), dshHome)
-  if (fromArgv !== undefined) {
-    return makeProfileFacts(fromArgv.name, fromArgv.dir, candidates, 'argv', 'observed')
+  const argvValue = interpretProfileValue(readProfileArg(argv), dshHome)
+  const acceptedFromArgv = argvValue === undefined ? undefined : acceptedProfileDir(argvValue, candidates)
+  if (acceptedFromArgv !== undefined) {
+    return makeProfileFacts(acceptedFromArgv.name, acceptedFromArgv.dir, candidates, 'argv', 'observed')
   }
 
+  const ignored = fromEnv === undefined ? {} : { ignoredEnvProfile: fromEnv.name }
   if (candidates.length === 1) {
     const only = candidates[0]
     if (only !== undefined) {
-      return makeProfileFacts(only, join(dshHome, PROFILES_DIRECTORY, only), candidates, 'single-profile', 'observed')
+      return makeProfileFacts(
+        only,
+        join(dshHome, PROFILES_DIRECTORY, only),
+        candidates,
+        'single-profile',
+        'observed',
+        ignored,
+      )
     }
   }
   if (candidates.includes(PREFERRED_PROFILE)) {
@@ -228,12 +254,39 @@ export function discoverProfile(
       candidates,
       'preferred-desktop',
       'inferred',
+      ignored,
     )
   }
   if (candidates.length > 1) {
-    return makeProfileFacts(undefined, undefined, candidates, 'ambiguous', 'unavailable')
+    return makeProfileFacts(undefined, undefined, candidates, 'ambiguous', 'unavailable', ignored)
   }
-  return makeProfileFacts(undefined, undefined, candidates, 'unavailable', 'unavailable')
+  return makeProfileFacts(undefined, undefined, candidates, 'unavailable', 'unavailable', ignored)
+}
+
+/**
+ * Decide whether a name-or-path read from the ambient shell is believable.
+ *
+ * A profile is believable when its directory is actually there: either it is
+ * one of the listed candidates, or the path itself resolves to a directory.
+ * Anything else names a profile this host is not running, so it is discarded
+ * and the caller falls through to the weaker sources.
+ */
+function acceptedProfileDir(
+  reading: { name: string; dir: string },
+  candidates: readonly string[],
+): { name: string; dir: string } | undefined {
+  if (candidates.includes(reading.name)) return reading
+  if (directoryExists(reading.dir)) return reading
+  return undefined
+}
+
+/** True when `dir` is a readable directory. Never throws. */
+function directoryExists(dir: string): boolean {
+  try {
+    return statSync(dir).isDirectory()
+  } catch {
+    return false
+  }
 }
 
 /** Build {@link ProfileFacts} without ever writing an explicit `undefined`. */
@@ -243,10 +296,12 @@ function makeProfileFacts(
   candidates: readonly string[],
   source: ProfileResolution,
   evidence: EvidenceKind,
+  extra?: { ignoredEnvProfile?: string },
 ): ProfileFacts {
   const facts: ProfileFacts = { candidates, source, evidence }
   if (name !== undefined) facts.name = name
   if (dir !== undefined) facts.dir = dir
+  if (extra?.ignoredEnvProfile !== undefined) facts.ignoredEnvProfile = extra.ignoredEnvProfile
   return facts
 }
 

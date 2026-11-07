@@ -130,6 +130,23 @@ describe('profileIdentityCheck', () => {
     expect(result.summary).toContain('2 DSH profiles')
     expect(result.details).toMatchObject({ candidateCount: 2, resolution: 'ambiguous' })
   })
+
+  it('discloses a DSH_PROFILE it refused to believe', () => {
+    const result = profileIdentityCheck({
+      profile: profile({ ignoredEnvProfile: 'desktop' }),
+    })
+    expect(result.status).toBe('pass')
+    expect(result.summary).toContain('does not exist under this DSH home')
+    expect(result.details).toMatchObject({ ignoredEnvProfile: 'desktop' })
+  })
+
+  it('still discloses the discarded name when it could not resolve a profile at all', () => {
+    const result = profileIdentityCheck({
+      profile: { candidates: [], source: 'unavailable', evidence: 'unavailable', ignoredEnvProfile: 'desktop' },
+    })
+    expect(result.status).toBe('unknown')
+    expect(result.details).toMatchObject({ ignoredEnvProfile: 'desktop' })
+  })
 })
 
 describe('pluginInstalledCheck', () => {

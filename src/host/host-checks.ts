@@ -133,9 +133,11 @@ export function profileIdentityCheck(input: { profile: ProfileFacts }): CheckRes
   const { profile } = input
   const evidenceSource: EvidenceSource = profile.source === 'injected' ? 'user_supplied' : 'local_metadata'
   const candidateCount = profile.candidates.length
+  const ignored = profile.ignoredEnvProfile
 
   if (profile.evidence === 'unavailable' || profile.name === undefined) {
     const details: Record<string, unknown> = { candidateCount, resolution: profile.source }
+    if (ignored !== undefined) details['ignoredEnvProfile'] = ignored
     return unknown({
       id: 'profile-identity',
       evidenceKind: 'unavailable',
@@ -158,6 +160,15 @@ export function profileIdentityCheck(input: { profile: ProfileFacts }): CheckRes
     candidateCount,
     resolution: profile.source,
   }
+  if (ignored !== undefined) details['ignoredEnvProfile'] = ignored
+  // `DSH_PROFILE` inherited from the shell that launched the host names the
+  // *parent's* profile. Saying so keeps the reader from believing an unrelated
+  // profile was consulted.
+  const discarded =
+    ignored === undefined
+      ? undefined
+      : `DSH_PROFILE named "${ignored}", which does not exist under this DSH home, so it was ignored.`
+
   if (profile.evidence === 'inferred') {
     details['inferred'] = true
     return pass({
@@ -165,7 +176,7 @@ export function profileIdentityCheck(input: { profile: ProfileFacts }): CheckRes
       evidenceKind: 'inferred',
       source: evidenceSource,
       cost: OFFLINE,
-      summary: `The running profile was inferred as "${profile.name}": ${candidateCount} profiles exist and this is the Desktop one.`,
+      summary: `The running profile was inferred as "${profile.name}": ${candidateCount} profiles exist and this is the Desktop one.${discarded === undefined ? '' : ` ${discarded}`}`,
       nextSteps: ['Set DSH_PROFILE if this is not the profile that is actually running.'],
       details,
     })
@@ -175,7 +186,7 @@ export function profileIdentityCheck(input: { profile: ProfileFacts }): CheckRes
     evidenceKind: 'observed',
     source: evidenceSource,
     cost: OFFLINE,
-    summary: `The evidence came from the "${profile.name}" profile.`,
+    summary: `The evidence came from the "${profile.name}" profile.${discarded === undefined ? '' : ` ${discarded}`}`,
     details,
   })
 }

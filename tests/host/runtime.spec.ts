@@ -168,4 +168,45 @@ describe('discoverProfile', () => {
     expect(profile.name).toBe('web')
     expect(profile.source).toBe('injected')
   })
+
+  it('ignores a DSH_PROFILE that names a profile this DSH home does not have', () => {
+    // DSH exports its own profile name into every model shell call, so a host
+    // started from such a shell inherits the *parent's* name. Believing it
+    // reported a profile that was neither running nor on disk.
+    const home = dshHomeWith(['pd-accept'])
+    const profile = discoverProfile(home, undefined, { env: { DSH_PROFILE: 'desktop' }, argv: [] })
+    expect(profile.name).toBe('pd-accept')
+    expect(profile.source).toBe('single-profile')
+    expect(profile.ignoredEnvProfile).toBe('desktop')
+  })
+
+  it('does not claim observed evidence for a profile it had to discard', () => {
+    const home = dshHomeWith(['desktop', 'web'])
+    const profile = discoverProfile(home, undefined, { env: { DSH_PROFILE: 'phantom' }, argv: [] })
+    expect(profile.name).toBe('desktop')
+    expect(profile.evidence).toBe('inferred')
+    expect(profile.ignoredEnvProfile).toBe('phantom')
+  })
+
+  it('still accepts a DSH_HOME that points at an existing profile directory', () => {
+    const home = dshHomeWith(['desktop', 'web'])
+    const inside = join(home, 'profiles', 'web')
+    const profile = discoverProfile(home, undefined, { env: { DSH_HOME: inside }, argv: [] })
+    expect(profile.source).toBe('env')
+    expect(profile.ignoredEnvProfile).toBeUndefined()
+  })
+
+  it('ignores a --profile that names a directory that is not there', () => {
+    const home = dshHomeWith(['desktop', 'web'])
+    const profile = discoverProfile(home, undefined, { env: {}, argv: ['dsh', '--profile', 'ghost'] })
+    expect(profile.name).toBe('desktop')
+    expect(profile.source).toBe('preferred-desktop')
+    expect(profile.evidence).toBe('inferred')
+  })
+
+  it('records nothing extra when the environment names no profile', () => {
+    const home = dshHomeWith(['desktop'])
+    const profile = discoverProfile(home, undefined, { env: {}, argv: [] })
+    expect(profile.ignoredEnvProfile).toBeUndefined()
+  })
 })
