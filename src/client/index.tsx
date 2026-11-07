@@ -126,10 +126,15 @@ export function apply(ctx: ClientContext): void {
     layout = (scoped as unknown as { layout?: LayoutFace }).layout
   })
 
+  // Each surface is gated on its slot actually being declared. A host that
+  // ships the sidebar without the plugin manager (or the reverse) still gets the
+  // surface it can host, and registering into an undeclared slot never throws.
   const offPanel = guardContribution('main panel', () =>
-    ctx.slots.register(
-      { name: 'main', key: PANEL_ID, locale: LOCALE_NAMESPACE, inject: () => ({ t }) },
-      () => <Panel t={t} />,
+    ctx.slots.inject('main', () =>
+      ctx.slots.register(
+        { name: 'main', key: PANEL_ID, locale: LOCALE_NAMESPACE, inject: () => ({ t }) },
+        () => <Panel t={t} />,
+      ),
     ),
   )
 
@@ -149,14 +154,16 @@ export function apply(ctx: ClientContext): void {
   )
 
   const offBundlePage = guardContribution('bundle configuration page', () =>
-    ctx.slots.register(
-      {
-        name: 'plugins.bundle.config',
-        key: PACKAGE_NAME,
-        locale: LOCALE_NAMESPACE,
-        inject: () => ({ t }),
-      },
-      (props: { view?: string }) => (props.view === 'page' ? <Panel t={t} /> : null),
+    ctx.slots.inject('plugins.bundle.config', () =>
+      ctx.slots.register(
+        {
+          name: 'plugins.bundle.config',
+          key: PACKAGE_NAME,
+          locale: LOCALE_NAMESPACE,
+          inject: () => ({ t }),
+        },
+        (props: { view?: string }) => (props.view === 'page' ? <Panel t={t} /> : null),
+      ),
     ),
   )
 
