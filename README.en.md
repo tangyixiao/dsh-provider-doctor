@@ -106,7 +106,7 @@ A stethoscope icon appears in the left sidebar; the plugin's bundle page in the 
 
 ```bash
 pnpm install
-pnpm run check        # typecheck + 20 test files / 427 cases + build
+pnpm run check        # typecheck + 21 test files / 453 cases + build
 pnpm run build        # tsdown: ESM for the Host, CJS + ModuleLoader for the Client
 ```
 
@@ -119,7 +119,7 @@ src/
   providers/    child-process wrapper, recent-error reader, adapters for both plugins
   privacy/      redaction whitelist
   client/       React panel, sidebar entry, i18n, styles
-tests/          20 spec files
+tests/          21 spec files
 docs/           architecture notes
 ```
 

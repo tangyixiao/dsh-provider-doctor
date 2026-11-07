@@ -106,7 +106,7 @@ dsh plugin install dsh-provider-doctor
 
 ```bash
 pnpm install
-pnpm run check        # typecheck + 20 个测试文件 / 427 个用例 + build
+pnpm run check        # typecheck + 21 个测试文件 / 453 个用例 + build
 pnpm run build        # tsdown：Host 走 ESM，Client 走 CJS + ModuleLoader 包装
 ```
 
@@ -119,7 +119,7 @@ src/
   providers/    子进程包装、最近错误读取、两个插件的适配器
   privacy/      脱敏白名单
   client/       React 面板、侧栏入口、国际化、样式
-tests/          20 个 spec 文件
+tests/          21 个 spec 文件
 docs/           架构说明
 ```
 
