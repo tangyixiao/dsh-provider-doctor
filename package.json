@@ -2,7 +2,7 @@
   "name": "dsh-provider-doctor",
   "displayName": "DSH Provider Doctor",
   "description": "Diagnose why a model provider is unavailable in DeepSeek Harness: host, plugin, registration, client, credentials and catalog evidence in one read-only report.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "keywords": [
     "dsh-plugin",
     "deepseek-harness",
@@ -11,6 +11,15 @@
     "model-provider"
   ],
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tangyixiao/dsh-provider-doctor.git"
+  },
+  "homepage": "https://github.com/tangyixiao/dsh-provider-doctor#readme",
+  "bugs": {
+    "url": "https://github.com/tangyixiao/dsh-provider-doctor/issues"
+  },
+  "author": "Tangyixiao",
   "engines": {
     "node": "^22.19.0 || >=24.0.0",
     "dsh": "0.2.2-rc.1"
