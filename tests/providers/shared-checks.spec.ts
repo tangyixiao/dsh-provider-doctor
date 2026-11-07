@@ -92,7 +92,7 @@ describe('providerConfigurableCheck', () => {
     expect(result.status).toBe('warning')
     expect(result.reasonCode).toBe('provider_not_configurable')
     expect(result.summary).toContain('cannot be configured')
-    expect(result.nextSteps.join(' ')).toContain('Requests can still be served')
+    expect(result.nextSteps.join(' ')).toContain('requests can still be served')
   })
 
   it('warns and quotes the reported configuration error', () => {
@@ -190,5 +190,30 @@ describe('modelCatalogCheck', () => {
     }
     await modelCatalogCheck({ llm, providerId: 'workbuddy' })
     expect(calls).toEqual(['listModels'])
+  })
+
+  it('does not read a catalog when no route adapter exists to read it from', async () => {
+    const calls: string[] = []
+    const llm: LlmLike = {
+      listProviders: () => [],
+      listConfigurableProviders: () => [],
+      listModels: async () => {
+        calls.push('listModels')
+        return [{ id: 'only' }]
+      },
+    }
+    const result = await modelCatalogCheck({ llm, providerId: 'workbuddy', registered: false })
+    expect(result.status).toBe('not_checked')
+    expect(result.reasonCode).toBe('provider_not_registered')
+    expect(calls).toEqual([])
+  })
+
+  it('reads the catalog when the route is registered', async () => {
+    const result = await modelCatalogCheck({
+      llm: fakeLlm({ listModels: async () => [{ id: 'only' }] }),
+      providerId: 'workbuddy',
+      registered: true,
+    })
+    expect(result.status).toBe('pass')
   })
 })

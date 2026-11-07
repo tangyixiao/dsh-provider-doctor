@@ -91,14 +91,16 @@ function createAdapter(variant: WorkBuddyVariantSpec): ProviderAdapter {
       const dependencies = readProfileDependencyMap(context.profileDir)
       const identity = { name: WORKBUDDY_PACKAGE }
 
+      const registration = providerRegisteredCheck({
+        llm: context.host.llm,
+        providerId: variant.id,
+        pluginName: WORKBUDDY_PACKAGE,
+      })
+
       const checks: CheckResult[] = [
         pluginInstalledCheck({ pluginName: WORKBUDDY_PACKAGE, identity, inventory, dependencies }),
         pluginEnabledCheck({ pluginName: WORKBUDDY_PACKAGE, identity, inventory }),
-        providerRegisteredCheck({
-          llm: context.host.llm,
-          providerId: variant.id,
-          pluginName: WORKBUDDY_PACKAGE,
-        }),
+        registration,
         providerConfigurableCheck({ llm: context.host.llm, providerId: variant.id }),
       ]
 
@@ -108,7 +110,13 @@ function createAdapter(variant: WorkBuddyVariantSpec): ProviderAdapter {
       })
       const cliCheck = await diagnoseCredential(context, cli, variant.id)
       checks.push(cliCheck.credential)
-      checks.push(await modelCatalogCheck({ llm: context.host.llm, providerId: variant.id }))
+      checks.push(
+        await modelCatalogCheck({
+          llm: context.host.llm,
+          providerId: variant.id,
+          registered: registration.status === 'pass',
+        }),
+      )
       checks.push(cliCheck.diagnostic)
       checks.push(recentErrorFor(context, variant.id))
       return checks

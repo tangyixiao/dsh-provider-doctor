@@ -319,19 +319,28 @@ export const ZCODE_ADAPTER: ProviderAdapter = {
     const dependencies = readProfileDependencies(context.profileDir)
     const identity = { name: ZCODE_PACKAGE }
 
+    const registration = providerRegisteredCheck({
+      llm: context.host.llm,
+      providerId: ZCODE_PROVIDER,
+      pluginName: ZCODE_PACKAGE,
+    })
+
     const checks: CheckResult[] = [
       pluginInstalledCheck({ pluginName: ZCODE_PACKAGE, identity, inventory, dependencies }),
       pluginEnabledCheck({ pluginName: ZCODE_PACKAGE, identity, inventory }),
-      providerRegisteredCheck({ llm: context.host.llm, providerId: ZCODE_PROVIDER, pluginName: ZCODE_PACKAGE }),
+      registration,
       providerConfigurableCheck({ llm: context.host.llm, providerId: ZCODE_PROVIDER }),
     ]
 
+    const registered = registration.status === 'pass'
     const cliPath = await resolvePluginCli(context.profileDir, ZCODE_PACKAGE)
     const hint = await zcodeCliHint()
 
     if (!context.connectionCheck) {
       checks.push(await cliPresence(cliPath))
-      checks.push(await modelCatalogCheck({ llm: context.host.llm, providerId: ZCODE_PROVIDER }))
+      checks.push(
+        await modelCatalogCheck({ llm: context.host.llm, providerId: ZCODE_PROVIDER, registered }),
+      )
       checks.push(
         notChecked({
           id: 'provider-diagnostic',
@@ -367,7 +376,9 @@ export const ZCODE_ADAPTER: ProviderAdapter = {
           details: { provider: ZCODE_PROVIDER },
         }),
       )
-      checks.push(await modelCatalogCheck({ llm: context.host.llm, providerId: ZCODE_PROVIDER }))
+      checks.push(
+        await modelCatalogCheck({ llm: context.host.llm, providerId: ZCODE_PROVIDER, registered }),
+      )
       checks.push(
         fail({
           id: 'provider-diagnostic',
@@ -386,7 +397,9 @@ export const ZCODE_ADAPTER: ProviderAdapter = {
 
     const reading = await readCli(cliPath, ['doctor', '--json'], context)
     checks.push(await credentialCheckFrom(reading))
-    checks.push(await modelCatalogCheck({ llm: context.host.llm, providerId: ZCODE_PROVIDER }))
+    checks.push(
+      await modelCatalogCheck({ llm: context.host.llm, providerId: ZCODE_PROVIDER, registered }),
+    )
     checks.push(diagnosticCheckFrom(reading))
     checks.push(recentErrorNotRecorded())
     return checks

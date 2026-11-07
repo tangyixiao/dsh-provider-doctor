@@ -23,7 +23,7 @@
  */
 
 import type { CheckResult } from '../shared/contract.ts'
-import { fail, pass, unknown, warn } from '../shared/check-helpers.ts'
+import { fail, notChecked, pass, unknown, warn } from '../shared/check-helpers.ts'
 import { describeError } from '../shared/check-helpers.ts'
 import type { ConfigurableProviderLike, LlmLike } from './types.ts'
 
@@ -155,9 +155,9 @@ export function providerConfigurableCheck(input: Omit<RegistrationInput, 'plugin
       source: 'live_host',
       cost: OFFLINE,
       reasonCode: 'provider_not_configurable',
-      summary: `"${input.providerId}" is registered but has no entry in the configuration directory, so it cannot be configured from settings.`,
+      summary: `"${input.providerId}" has no entry in the configuration directory, so it cannot be configured from settings.`,
       nextSteps: [
-        'Requests can still be served; this only affects the settings surface.',
+        'If a route is registered for it, requests can still be served; this only affects the settings surface.',
         'Report this to the provider plugin maintainer if the configuration page is expected.',
       ],
       details: { provider: input.providerId, directoryCount: directory.length },
@@ -200,12 +200,21 @@ export function providerConfigurableCheck(input: Omit<RegistrationInput, 'plugin
  * so this is an in-process read. It never asks the provider to discover models
  * over the network.
  *
- * @param input - The live `llm` service and the id whose catalog to read.
- * @returns `pass` non-empty, `fail` empty or rejected, `unknown` when unreadable.
+ * When the caller already knows no route adapter exists, asking for a catalog
+ * would produce a second failure describing the first one. That case reports
+ * `not_checked` with the registration reason instead, so the report carries one
+ * cause and not two symptoms of it.
+ *
+ * @param input - The live `llm` service, the id whose catalog to read, and what
+ * the registration check already found.
+ * @returns `pass` non-empty, `fail` empty, `unknown` when unreadable, or
+ * `not_checked` when there is no route to read from.
  */
 export async function modelCatalogCheck(input: {
   llm: LlmLike | undefined
   providerId: string
+  /** `false` when the registration check proved no adapter exists. */
+  registered?: boolean
 }): Promise<CheckResult> {
   if (input.llm === undefined) {
     return unknown({
@@ -216,6 +225,19 @@ export async function modelCatalogCheck(input: {
       reasonCode: 'llm_unavailable',
       summary: 'This host exposes no model-provider service, so the model catalog could not be read.',
       nextSteps: ['Run the diagnosis from the DSH Web or Desktop app.'],
+      details: { provider: input.providerId },
+    })
+  }
+
+  if (input.registered === false) {
+    return notChecked({
+      id: 'model-catalog',
+      evidenceKind: 'unavailable',
+      source: 'live_host',
+      cost: OFFLINE,
+      reasonCode: 'provider_not_registered',
+      summary: `No route adapter is registered for "${input.providerId}", so it has no model catalog to read.`,
+      nextSteps: ['Fix the registration failure above; the catalog follows from it.'],
       details: { provider: input.providerId },
     })
   }
