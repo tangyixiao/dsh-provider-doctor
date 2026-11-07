@@ -53,6 +53,8 @@ export const REASON_CODES = {
   cli_missing: 'cli_missing',
   /** The CLI path exists but its runtime metadata could not be read. */
   cli_runtime_unreadable: 'cli_runtime_unreadable',
+  /** The diagnostic executable exists but cannot resolve a module it imports. */
+  diagnostic_cli_unloadable: 'diagnostic_cli_unloadable',
 
   /** `llm.listModels` returned an empty catalog. */
   catalog_empty: 'catalog_empty',

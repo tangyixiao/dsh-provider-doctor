@@ -242,15 +242,26 @@ export function interpretDoctor(
     return { credential: credentialTimedOut(providerId), diagnostic: diagnosticTimedOut(providerId) }
   }
   if (reading.kind === 'failed') {
+    // A CLI that could not start is not a signed-out account. The distinction
+    // matters: `signed_out` tells the reader to sign in again, which would be
+    // the wrong repair when the executable never got as far as reading a token.
+    const launchFailure = isLaunchFailure(reading)
     return {
       credential: unknown({
         id: 'credential-metadata',
         evidenceKind: 'unavailable',
         source: 'provider_diagnostic',
         cost: 'side_effecting',
-        reasonCode: 'signed_out',
-        summary: 'The provider\'s diagnostic exited without a readable answer, so credential state is unknown.',
-        nextSteps: ['Run the provider\'s diagnostic from a terminal to see its full output.'],
+        reasonCode: launchFailure ? 'diagnostic_cli_unloadable' : 'signed_out',
+        summary: launchFailure
+          ? 'The provider\'s diagnostic could not start: it reported a missing module rather than a credential state.'
+          : 'The provider\'s diagnostic exited without a readable answer, so credential state is unknown.',
+        nextSteps: launchFailure
+          ? [
+              'The provider\'s CLI needs its @deepseek-ai peer packages resolvable from the profile that installed it.',
+              'Reinstall the provider plugin in this profile, then run the connection check again.',
+            ]
+          : ['Run the provider\'s diagnostic from a terminal to see its full output.'],
         details: { provider: providerId, exitMessage: reading.message },
       }),
       diagnostic: fail({
@@ -258,9 +269,13 @@ export function interpretDoctor(
         evidenceKind: 'observed',
         source: 'provider_diagnostic',
         cost: 'side_effecting',
-        reasonCode: 'internal_error',
-        summary: 'The provider\'s own diagnostic failed to produce a report.',
-        nextSteps: ['Run the provider\'s CLI doctor from a terminal to read the unredacted cause.'],
+        reasonCode: launchFailure ? 'diagnostic_cli_unloadable' : 'internal_error',
+        summary: launchFailure
+          ? 'The provider\'s own diagnostic never ran: its executable could not resolve a module it imports.'
+          : 'The provider\'s own diagnostic failed to produce a report.',
+        nextSteps: launchFailure
+          ? ['Reinstall the provider plugin in this profile so its peer packages resolve, then run the connection check again.']
+          : ['Run the provider\'s CLI doctor from a terminal to read the unredacted cause.'],
         details: { provider: providerId, exitMessage: reading.message },
       }),
     }
@@ -403,6 +418,23 @@ function declaredProvider(value: unknown): string | undefined {
   if (typeof value !== 'object' || value === null) return undefined
   const provider = (value as { provider?: unknown }).provider
   return typeof provider === 'string' && provider.length > 0 ? provider : undefined
+}
+
+/**
+ * Whether a failed CLI run died on module resolution rather than on its work.
+ *
+ * Measured on a real profile: a plugin installed without its `@deepseek-ai`
+ * peers makes `node <bin>` abort with `ERR_MODULE_NOT_FOUND` before any of the
+ * provider's own code runs. Reporting that as `signed_out` would send someone
+ * to sign in again for a packaging fault, so the two causes are kept apart.
+ */
+export function isLaunchFailure(reading: { message: string; stderr?: string }): boolean {
+  const text = `${reading.message}\n${reading.stderr ?? ''}`
+  return (
+    text.includes('ERR_MODULE_NOT_FOUND') ||
+    text.includes('Cannot find package') ||
+    text.includes('Cannot find module')
+  )
 }
 
 /** Build the provider-diagnostic check from a parsed `doctor --json` document. */

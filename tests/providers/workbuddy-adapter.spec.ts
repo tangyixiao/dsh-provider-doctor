@@ -4,6 +4,7 @@ import {
   credentialFrom,
   diagnosticFrom,
   interpretDoctor,
+  isLaunchFailure,
   variantCliId,
   WORKBUDDY_ADAPTERS,
 } from '../../src/providers/workbuddy/adapter.ts'
@@ -101,6 +102,50 @@ describe('interpretDoctor', () => {
     expect(pair.credential.status).toBe('cancelled')
     expect(pair.credential.reasonCode).toBe('cancelled')
     expect(pair.diagnostic.status).toBe('cancelled')
+  })
+
+  it('does not blame the account when the CLI never started', () => {
+    // Measured on a real profile: without its @deepseek-ai peers the provider's
+    // bin dies on module resolution before reading any credential.
+    const pair = interpretDoctor(
+      {
+        kind: 'failed',
+        message:
+          "Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@deepseek-ai/dsh-home-paths' imported from D:\\profiles\\pd-accept\\node_modules\\dsh-workbuddy-connect-community\\lib\\bin.js",
+        stdout: '',
+        stderr: "Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@deepseek-ai/dsh-home-paths'",
+      },
+      'workbuddy',
+    )
+    expect(pair.credential.reasonCode).toBe('diagnostic_cli_unloadable')
+    expect(pair.diagnostic.reasonCode).toBe('diagnostic_cli_unloadable')
+    expect(pair.credential.summary).toContain('could not start')
+    expect(JSON.stringify(pair)).not.toMatch(/signed out/i)
+  })
+
+  it('keeps the signed-out hint when the CLI ran but printed nothing usable', () => {
+    const pair = interpretDoctor(
+      { kind: 'failed', message: 'the diagnostic printed no JSON document', stdout: '', stderr: '' },
+      'workbuddy',
+    )
+    expect(pair.credential.reasonCode).toBe('signed_out')
+    expect(pair.diagnostic.reasonCode).toBe('internal_error')
+  })
+})
+
+describe('isLaunchFailure', () => {
+  it('recognises the several spellings Node uses for an unloadable import', () => {
+    for (const message of [
+      'Error [ERR_MODULE_NOT_FOUND]: Cannot find package "@deepseek-ai/dsh-llm"',
+      "Error: Cannot find module 'D:\\x\\lib\\bin.js'",
+    ]) {
+      expect(isLaunchFailure({ message })).toBe(true)
+    }
+  })
+
+  it('does not claim a launch failure from an ordinary diagnostic complaint', () => {
+    expect(isLaunchFailure({ message: 'the provider is signed out' })).toBe(false)
+    expect(isLaunchFailure({ message: 'no JSON', stderr: 'warning: region mismatch' })).toBe(false)
   })
 })
 
