@@ -86,8 +86,10 @@ ZCode 的 `turn` 和 `image` 子命令会消耗 Start Plan 额度，本插件在
 ## 安装
 
 ```bash
-dsh plugin install dsh-provider-doctor
+dsh plugin --profile desktop add dsh-provider-doctor
 ```
+
+将 `desktop` 替换成要安装到的实际 profile 名称。
 
 或者手动加到 profile 的依赖里，然后重启宿主。插件通过 `cordis.patch.yml` 插入一行，行 id 是 `provider-doctor`。
 
@@ -106,7 +108,7 @@ dsh plugin install dsh-provider-doctor
 
 ```bash
 pnpm install
-pnpm run check        # typecheck + 21 个测试文件 / 453 个用例 + build
+pnpm run check        # typecheck + 21 个测试文件 / 457 个用例 + build
 pnpm run build        # tsdown：Host 走 ESM，Client 走 CJS + ModuleLoader 包装
 ```
 
