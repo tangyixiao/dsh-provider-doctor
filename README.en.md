@@ -86,8 +86,10 @@ Absolute paths in the panel are collapsed by default and require a click to reve
 ## Install
 
 ```bash
-dsh plugin install dsh-provider-doctor
+dsh plugin --profile desktop add dsh-provider-doctor
 ```
+
+Replace `desktop` with the actual target profile name.
 
 Or add it to a profile's dependencies and restart the host. The plugin inserts one row through `cordis.patch.yml`, with row id `provider-doctor`.
 
@@ -106,7 +108,7 @@ A stethoscope icon appears in the left sidebar; the plugin's bundle page in the 
 
 ```bash
 pnpm install
-pnpm run check        # typecheck + 21 test files / 453 cases + build
+pnpm run check        # typecheck + 21 test files / 457 cases + build
 pnpm run build        # tsdown: ESM for the Host, CJS + ModuleLoader for the Client
 ```
 

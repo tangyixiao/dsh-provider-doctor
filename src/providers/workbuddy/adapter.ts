@@ -29,7 +29,6 @@ import {
   pass,
   timedOut,
   unknown,
-  warn,
 } from '../../shared/check-helpers.ts'
 import { REASON_CODES } from '../../shared/reason-codes.ts'
 import { readProfileDependencies as readProfileDependencyMap } from '../../host/inventory.ts'
@@ -460,20 +459,8 @@ export function diagnosticFrom(doctor: WorkBuddyDoctorJson, providerId: string):
     })
   }
 
-  if (doctor.hostHeartbeatProcessAlive === false) {
-    return warn({
-      id: 'provider-diagnostic',
-      evidenceKind: 'observed',
-      source: 'provider_diagnostic',
-      cost: 'side_effecting',
-      reasonCode: 'plugin_not_loaded',
-      summary:
-        'The provider\'s host bundle recorded a heartbeat but that process is no longer running, so its routes will not answer.',
-      nextSteps: ['Reload DSH so the plugin starts again, then re-run the connection check.'],
-      details,
-    })
-  }
-
+  // The shared heartbeat is not tied to this host or profile. Keep its reading
+  // as context only; the live host's registration check owns the route verdict.
   return pass({
     id: 'provider-diagnostic',
     evidenceKind: 'observed',
