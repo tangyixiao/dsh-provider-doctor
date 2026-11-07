@@ -42,8 +42,15 @@ const HOME_PATH = /(?:^|[\s("'`=:])(~\/[^\s"'`]+|~\\[^\s"'`]+)/g
 /** JWTs, wherever they appear. */
 const JWT = /\beyJ[A-Za-z0-9_-]{4,}\.[A-Za-z0-9_-]{4,}\.[A-Za-z0-9_-]{4,}\b/g
 
-/** `sk-…`-style API keys and long opaque tokens after a key name. */
-const API_KEY = /\b(?:sk|pk|rk)_[A-Za-z0-9_-]{12,}\b/g
+/**
+ * `sk-…` / `pk_…`-style API keys.
+ *
+ * Both separators are accepted because providers use both: OpenAI-style keys
+ * are `sk-`, while several Chinese providers use `sk_`. The leading `\b` plus
+ * the 12-character tail keep ordinary hyphenated words such as
+ * "risk-assessment" out of the match.
+ */
+const API_KEY = /\b(?:sk|pk|rk)[-_][A-Za-z0-9_-]{12,}\b/g
 
 /** `name=value` pairs whose name says it carries a secret. */
 const SECRET_PARAM =
@@ -134,9 +141,9 @@ function readinessOf(report: DiagnosticReport): ShareableReportEntry['readiness'
   const catalogCheck = byId.get('model-catalog')
 
   return {
-    installed: triState(installedCheck, 'pass', 'fail'),
-    enabled: triState(enabledCheck, 'pass', 'fail'),
-    registration: triState(registeredCheck, 'pass', 'fail'),
+    installed: triState(installedCheck, 'installed', 'missing'),
+    enabled: triState(enabledCheck, 'enabled', 'disabled'),
+    registration: triState(registeredCheck, 'registered', 'missing'),
     catalog: catalogTriState(catalogCheck),
     // Fixed by construction: this plugin never generates a model reply.
     liveInference: 'not-tested',
@@ -144,15 +151,15 @@ function readinessOf(report: DiagnosticReport): ShareableReportEntry['readiness'
 }
 
 /** Map one check onto installed/enabled/registration style three-state facts. */
-function triState(
+function triState<P extends string, F extends string>(
   check: CheckResult | undefined,
-  pass: string,
-  fail: string,
-): 'installed' | 'missing' | 'unknown' | 'enabled' | 'disabled' | 'registered' | 'missing' {
-  if (check === undefined) return 'unknown' as never
-  if (check.status === 'pass') return pass as never
-  if (check.status === 'fail') return fail as never
-  return 'unknown' as never
+  pass: P,
+  fail: F,
+): P | F | 'unknown' {
+  if (check === undefined) return 'unknown'
+  if (check.status === 'pass') return pass
+  if (check.status === 'fail') return fail
+  return 'unknown'
 }
 
 /** The catalog's own four-state fact; `not_checked` stays distinguishable. */

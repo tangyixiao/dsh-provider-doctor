@@ -35,9 +35,11 @@ export interface CheckInput {
 /**
  * Build one check result, enforcing the contract's invariants.
  *
- * A `pass` with a reason code keeps the code only when the caller supplied a
- * recognised one; every other status without a code falls back to
- * `internal_error` rather than producing a report the UI cannot explain.
+ * A passing check never keeps a reason code: "why it did not work" is
+ * meaningless on a link that worked, and a shareable report that carried one
+ * would invite a reader to look for a fault that is not there. Every other
+ * status without a recognised code falls back to `internal_error` rather than
+ * producing a report the UI cannot explain.
  *
  * @param input - The check's verdict and its evidence.
  * @returns A complete, redacted {@link CheckResult}.
@@ -61,9 +63,9 @@ export function makeCheck(input: CheckInput): CheckResult {
 
 /** Keep a code when it is known; invent `internal_error` when a failure lacks one. */
 function normaliseReasonCode(status: CheckStatus, code: string | undefined): string | undefined {
-  if (code !== undefined && isReasonCode(code)) return code
   if (status === 'pass') return undefined
-  return status === 'pass' ? undefined : 'internal_error'
+  if (code !== undefined && isReasonCode(code)) return code
+  return 'internal_error'
 }
 
 /** A check that ran and found the link present. */
@@ -116,6 +118,10 @@ export type ProbeOutcome<T> =
  * cancelled through this helper — callers that start a process own its
  * disposal and must pass the same signal down.
  *
+ * Cancellation settles the race immediately rather than waiting for the probe:
+ * a hung child process would otherwise hold the run open until its own budget
+ * expired, which is exactly the moment the operator asked to stop.
+ *
  * @param run - The probe; receives the signal it should honour.
  * @param options - Budget and the outer cancellation signal.
  * @returns How the probe settled.
@@ -126,21 +132,39 @@ export async function probeWithBudget<T>(
 ): Promise<ProbeOutcome<T>> {
   if (options.signal.aborted) return { kind: 'cancelled' }
   const controller = new AbortController()
-  const forwardAbort = (): void => controller.abort()
+  let stopped = false
+  let settled = false
+  let resolveOutcome: (outcome: ProbeOutcome<T>) => void = () => {}
+  const settle = (outcome: ProbeOutcome<T>): void => {
+    if (settled) return
+    settled = true
+    resolveOutcome(outcome)
+  }
+  const forwardAbort = (): void => {
+    stopped = true
+    controller.abort()
+    settle({ kind: 'cancelled' })
+  }
   options.signal.addEventListener('abort', forwardAbort, { once: true })
   let timer: ReturnType<typeof setTimeout> | undefined
   try {
-    const budget = new Promise<ProbeOutcome<T>>((resolve) => {
-      timer = setTimeout(() => {
-        controller.abort()
-        resolve({ kind: 'timeout' })
-      }, options.budgetMs)
+    const raced = new Promise<ProbeOutcome<T>>((resolve) => {
+      resolveOutcome = resolve
     })
-    const work = run(controller.signal).then(
-      (value): ProbeOutcome<T> => ({ kind: 'value', value }),
-      (error: unknown): ProbeOutcome<T> => ({ kind: 'error', error }),
+    timer = setTimeout(() => {
+      controller.abort()
+      settle({ kind: 'timeout' })
+    }, options.budgetMs)
+    // The probe's own result only wins while nobody has asked to stop.
+    void run(controller.signal).then(
+      (value) => {
+        if (!stopped) settle({ kind: 'value', value })
+      },
+      (error: unknown) => {
+        if (!stopped) settle({ kind: 'error', error })
+      },
     )
-    return await Promise.race([work, budget])
+    return await raced
   } finally {
     if (timer !== undefined) clearTimeout(timer)
     options.signal.removeEventListener('abort', forwardAbort)

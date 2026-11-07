@@ -65,6 +65,15 @@ export const REASON_CODES = {
   timed_out: 'timed_out',
   /** The person cancelled the run while this check was pending. */
   cancelled: 'cancelled',
+  /** No request has been recorded for this provider yet. */
+  no_recorded_attempt: 'no_recorded_attempt',
+  /** The recorded request outcomes exist but could not be parsed. */
+  probe_store_unreadable: 'probe_store_unreadable',
+  /** A request was recorded, but it left the question undecided. */
+  inconclusive_probe: 'inconclusive_probe',
+  /** The recorded attempt was refused for the settings being requested. */
+  model_rejected_reasoning: 'model_rejected_reasoning',
+
   /** The check was not requested (side-effecting checks default to this). */
   not_requested: 'not_requested',
   /** An unexpected error was caught; its message is redacted before display. */
