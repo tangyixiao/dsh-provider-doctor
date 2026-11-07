@@ -1,0 +1,8 @@
+# Insert this bundle into the host's plugin tree.
+#
+# The id is the row id shown in the plugin manager; `name` is the npm package the
+# loader resolves. No config is declared: every knob this first version has is a
+# run-time choice in the panel, so nothing is written to the user's profile.
+- insert:
+    - id: provider-doctor
+      name: dsh-provider-doctor
