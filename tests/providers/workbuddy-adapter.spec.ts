@@ -221,15 +221,18 @@ describe('credentialFrom', () => {
 })
 
 describe('diagnosticFrom', () => {
-  it('passes for a live host heartbeat', () => {
+  it('passes when the provider diagnostic reports no internal problem', () => {
     const check = diagnosticFrom(doctor(), 'workbuddy')
     expect(check).toMatchObject({ id: 'provider-diagnostic', status: 'pass' })
     expect(check.details).toMatchObject({ hostBundleProcessAlive: true, signIn: 'signed-in' })
   })
 
-  it('warns when a recorded heartbeat belongs to a process that is gone', () => {
+  it('does not infer current registration from a stale shared heartbeat', () => {
     const check = diagnosticFrom(doctor({ hostHeartbeatProcessAlive: false }), 'workbuddy')
-    expect(check).toMatchObject({ status: 'warning', reasonCode: 'plugin_not_loaded' })
+    expect(check).toMatchObject({ status: 'pass' })
+    expect(check.reasonCode).toBeUndefined()
+    expect(check.details).toMatchObject({ hostBundleProcessAlive: false })
+    expect(JSON.stringify(check)).not.toMatch(/routes will not answer|Reload DSH/)
   })
 
   it('fails when the CLI ran but reported an error', () => {
@@ -239,7 +242,8 @@ describe('diagnosticFrom', () => {
 
   it('does not report a missing heartbeat as a failure of the plugin', () => {
     const check = diagnosticFrom(doctor({ hostHeartbeatPresent: false, hostHeartbeatProcessAlive: false }), 'workbuddy')
-    expect(check.status).not.toBe('fail')
+    expect(check.status).toBe('pass')
+    expect(check.reasonCode).toBeUndefined()
   })
 
   it('keeps the fallback model count for context', () => {
