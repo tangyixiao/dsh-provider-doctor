@@ -104,6 +104,19 @@ export function isWorkBuddyElectronReason(code: string | undefined): boolean {
   return typeof code === 'string' && code.startsWith('electron-')
 }
 
+/**
+ * The one free-text hint the doctor is willing to recognise.
+ *
+ * The provider CLI prints human sentences in `hints`, and some of them can
+ * quote a user path. Instead of copying that text into a report, the shape is
+ * collapsed onto a fixed token here; unrecognised hints are dropped entirely,
+ * so a future wording change degrades to "no hint" rather than to leaked text.
+ */
+export type WorkBuddyDoctorHint = 'host-bundle-not-running'
+
+/** The opening words of the "host bundle is not running" hint. */
+const HOST_BUNDLE_HINT_PREFIX = 'Host bundle not running'
+
 /** One `doctor --json` document, reduced to the fields the doctor may show. */
 export interface WorkBuddyDoctorJson {
   /** Package version the CLI reported. */
@@ -122,6 +135,8 @@ export interface WorkBuddyDoctorJson {
   hostHeartbeatProcessAlive: boolean | undefined
   /** Size of the compiled-in fallback roster. */
   fallbackModels: number | undefined
+  /** The recognised hint, when the CLI printed one of the known sentences. */
+  hint: WorkBuddyDoctorHint | undefined
 }
 
 /** One `doctor --share` document, reduced to its fixed-vocabulary fields. */
@@ -246,11 +261,28 @@ export function extractJsonObject(text: string): unknown {
 }
 
 /**
+ * Reduce the CLI's free-text hints to the one recognised token.
+ *
+ * @param value - The `hints` field of a parsed document.
+ * @returns The recognised hint, or `undefined`.
+ */
+function readHint(value: unknown): WorkBuddyDoctorHint | undefined {
+  if (!Array.isArray(value)) return undefined
+  for (const entry of value) {
+    if (typeof entry === 'string' && entry.startsWith(HOST_BUNDLE_HINT_PREFIX)) return 'host-bundle-not-running'
+  }
+  return undefined
+}
+
+/**
  * Reduce a parsed `doctor --json` document to the whitelisted fields.
  *
  * `desktopAuthFile.path`, `ownAuthFile`, `hostHeartbeat.path` and
  * `hostHeartbeat.pid` are deliberately not read: the adapter must not be able
  * to copy them into a report even by accident.
+ *
+ * @param value - The parsed JSON document.
+ * @returns The reduced document, or `undefined` when it is not one of ours.
  */
 export function readDoctorJson(value: unknown): WorkBuddyDoctorJson | undefined {
   const root = asRecord(value)
@@ -266,6 +298,7 @@ export function readDoctorJson(value: unknown): WorkBuddyDoctorJson | undefined 
     hostHeartbeatPresent: asBoolean(hostHeartbeat?.['present']),
     hostHeartbeatProcessAlive: asBoolean(hostHeartbeat?.['processAlive']),
     fallbackModels: asNumber(root['fallbackModels']),
+    hint: readHint(root['hints']),
   }
   // A document without a provider is not one of ours; treat it as unparseable
   // rather than reporting sign-in state read from another product's report.

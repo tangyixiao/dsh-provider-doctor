@@ -21,6 +21,7 @@ function doctor(overrides: Partial<WorkBuddyDoctorJson> = {}): WorkBuddyDoctorJs
     hostHeartbeatPresent: true,
     hostHeartbeatProcessAlive: true,
     fallbackModels: 19,
+    hint: undefined,
     ...overrides,
   }
 }
@@ -248,5 +249,19 @@ describe('diagnosticFrom', () => {
 
   it('keeps the fallback model count for context', () => {
     expect(diagnosticFrom(doctor({ fallbackModels: 3 }), 'workbuddy').details).toMatchObject({ fallbackModels: 3 })
+  })
+
+  it('says so when the CLI itself reported that no host bundle is running', () => {
+    const check = diagnosticFrom(doctor({ hint: 'host-bundle-not-running' }), 'workbuddy')
+    expect(check).toMatchObject({ status: 'pass' })
+    expect(check.reasonCode).toBeUndefined()
+    expect(check.summary).toMatch(/no host bundle is currently running/i)
+    expect(check.details).toMatchObject({ hostBundleHint: 'not-running' })
+  })
+
+  it('does not mention a host bundle when the CLI printed no such hint', () => {
+    const check = diagnosticFrom(doctor(), 'workbuddy')
+    expect(check.summary).not.toMatch(/host bundle is currently running/i)
+    expect(check.details).not.toHaveProperty('hostBundleHint')
   })
 })

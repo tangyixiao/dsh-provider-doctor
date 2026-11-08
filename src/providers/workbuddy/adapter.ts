@@ -461,12 +461,20 @@ export function diagnosticFrom(doctor: WorkBuddyDoctorJson, providerId: string):
 
   // The shared heartbeat is not tied to this host or profile. Keep its reading
   // as context only; the live host's registration check owns the route verdict.
+  // The CLI's own hint says the same thing more directly, but it is still a
+  // statement about a heartbeat file rather than about this process, so it is
+  // reported in the summary and never allowed to overrule `plugin-enabled`.
+  const hostBundleHint = doctor.hint === 'host-bundle-not-running'
+  if (hostBundleHint) details['hostBundleHint'] = 'not-running'
+
   return pass({
     id: 'provider-diagnostic',
     evidenceKind: 'observed',
     source: 'provider_diagnostic',
     cost: 'side_effecting',
-    summary: 'The provider\'s own diagnostic ran and reported no internal problem.',
+    summary: hostBundleHint
+      ? 'The provider\'s own diagnostic ran and reported no internal problem. It also reported that no host bundle is currently running for this DSH home, so its routes may not answer even though the check itself passed.'
+      : 'The provider\'s own diagnostic ran and reported no internal problem.',
     details,
   })
 }
