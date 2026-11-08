@@ -473,7 +473,7 @@ export function diagnosticFrom(doctor: WorkBuddyDoctorJson, providerId: string):
     source: 'provider_diagnostic',
     cost: 'side_effecting',
     summary: hostBundleHint
-      ? 'The provider\'s own diagnostic ran and reported no internal problem. It also reported that no host bundle is currently running for this DSH home, so its routes may not answer even though the check itself passed.'
+      ? 'The provider\'s own diagnostic ran and reported no internal problem. It also reported that no host bundle is currently running in this DSH profile, so its routes may not answer even though the check itself passed.'
       : 'The provider\'s own diagnostic ran and reported no internal problem.',
     details,
   })

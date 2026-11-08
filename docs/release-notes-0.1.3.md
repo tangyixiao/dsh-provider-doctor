@@ -4,7 +4,7 @@ This patch carries WorkBuddy's own diagnostic hints into the report without copy
 
 ## Changes
 
-- WorkBuddy 0.1.15 prints a `hints` array, and one of those sentences says the host bundle is not running for the current DSH home. `src/providers/workbuddy/plugin-package.ts` now reduces that array to a single fixed token and drops every other sentence, so a wording change upstream degrades to "no hint" instead of leaking a path into a report.
+- WorkBuddy 0.1.15 prints a `hints` array, and one of those sentences says the host bundle is not running in the current DSH profile. `src/providers/workbuddy/plugin-package.ts` now reduces that array to a single fixed token and drops every other sentence, so a wording change upstream degrades to "no hint" instead of leaking a path into a report.
 - `provider-diagnostic` keeps its `pass` status when the hint is present, because the diagnostic script itself did run. `src/providers/workbuddy/adapter.ts` adds `details.hostBundleHint: 'not-running'` and appends a sentence to the summary so the reading is not mistaken for "the whole chain works". The hint never overrules `plugin-enabled`: it describes a heartbeat file, not this process.
 - Both READMEs now show the current counts: 22 test files, 486 cases.
 
