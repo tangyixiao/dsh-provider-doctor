@@ -6,3 +6,7 @@ Thumbs.db
 *.log
 tmp/
 .tmp/
+
+work/
+
+__pycache__/
