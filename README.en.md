@@ -91,6 +91,14 @@ dsh plugin --profile desktop add dsh-provider-doctor
 
 Replace `desktop` with the actual target profile name.
 
+pnpm 11 enables `minimumReleaseAge` by default: a version published less than 24 hours ago is not picked by `add <name>`, `@latest`, or `@*`. The install silently lands on the previous mature version and appends a note like `(0.1.3 is available)` — easy to skim past, and then the new release looks broken when it is simply not selected yet. This is not an install failure. To get a fresh release right away, pin it:
+
+```bash
+dsh plugin --profile desktop add dsh-provider-doctor@0.1.4
+```
+
+Look the current version up with `npm view dsh-provider-doctor version`; do not copy the number above. You can also append `--config.minimum-release-age=0` to switch the policy off for that one command (`dsh plugin add` forwards it to pnpm), but that is your call, and this plugin does not recommend it.
+
 Or add it to a profile's dependencies and restart the host. The plugin inserts one row through `cordis.patch.yml`, with row id `provider-doctor`.
 
 A stethoscope icon appears in the left sidebar; the plugin's bundle page in the plugin manager shows the same panel.

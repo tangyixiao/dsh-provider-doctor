@@ -91,6 +91,14 @@ dsh plugin --profile desktop add dsh-provider-doctor
 
 将 `desktop` 替换成要安装到的实际 profile 名称。
 
+pnpm 11 默认启用 `minimumReleaseAge` 安全策略：发布不满 24 小时的版本不会被 `add <name>`、`@latest`、`@*` 选中，只会装上上一个成熟版本，并在输出里补一句 `(0.1.3 is available)` 之类的提示——很容易被当成噪音忽略，然后以为新版装不上。这不是安装失败。刚发版后想立刻装上新版，把版本写死：
+
+```bash
+dsh plugin --profile desktop add dsh-provider-doctor@0.1.4
+```
+
+最新版本号用 `npm view dsh-provider-doctor version` 查，不要照抄这里的数字。也可以在命令后加 `--config.minimum-release-age=0` 显式关掉这条策略（`dsh plugin add` 会把它透传给 pnpm），但那是你自己的取舍，本插件不推荐。
+
 或者手动加到 profile 的依赖里，然后重启宿主。插件通过 `cordis.patch.yml` 插入一行，行 id 是 `provider-doctor`。
 
 安装后左侧边栏会出现一个听诊器图标，点开就是诊断面板。插件管理页里的这个 bundle 也有同样的页面。
