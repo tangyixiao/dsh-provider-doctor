@@ -4,7 +4,7 @@
 
 <p align="center">沿着宿主、安装、注册、凭据与目录逐环取证，定位 DSH 模型连接断在哪里。</p>
 
-<p align="center">[简体中文](README.md) · [English](README.en.md)</p>
+<p align="center"><a href="README.md">简体中文</a> · <a href="README.en.md">English</a></p>
 
 [![Stars](https://img.shields.io/github/stars/tangyixiao/dsh-provider-doctor?style=flat)](https://github.com/tangyixiao/dsh-provider-doctor/stargazers) [![CI](https://img.shields.io/github/actions/workflow/status/tangyixiao/dsh-provider-doctor/check.yml?branch=main)](https://github.com/tangyixiao/dsh-provider-doctor/actions/workflows/check.yml) [![License](https://img.shields.io/github/license/tangyixiao/dsh-provider-doctor)](LICENSE) [![npm](https://img.shields.io/npm/v/dsh-provider-doctor)](https://www.npmjs.com/package/dsh-provider-doctor)
 
