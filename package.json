@@ -49,7 +49,9 @@
     "README.md",
     "README.en.md",
     "LICENSE",
-    "assets/logo.webp"
+    "assets/logo.webp",
+    "assets/NOTICE.md",
+    "assets/LICENSE-WHALE-ARTWORK"
   ],
   "license": "MIT",
   "dsh": {
