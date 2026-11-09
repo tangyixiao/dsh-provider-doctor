@@ -2,7 +2,7 @@
   "name": "dsh-provider-doctor",
   "displayName": "DSH Provider Doctor",
   "description": "Diagnose why a model provider is unavailable in DeepSeek Harness: host, plugin, registration, client, credentials and catalog evidence in one read-only report.",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "keywords": [
     "dsh-plugin",
     "deepseek-harness",

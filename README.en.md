@@ -100,7 +100,7 @@ Replace `desktop` with the actual target profile name.
 pnpm 11 enables `minimumReleaseAge` by default: a version published less than 24 hours ago is not picked by `add <name>`, `@latest`, or `@*`. The install silently lands on the previous mature version and appends a note like `(0.1.3 is available)` — easy to skim past, and then the new release looks broken when it is simply not selected yet. This is not an install failure. To get a fresh release right away, pin it:
 
 ```bash
-dsh plugin --profile desktop add dsh-provider-doctor@0.1.6
+dsh plugin --profile desktop add dsh-provider-doctor@0.1.7
 ```
 
 Look the current version up with `npm view dsh-provider-doctor version`; do not copy the number above. You can also append `--config.minimum-release-age=0` to switch the policy off for that one command (`dsh plugin add` forwards it to pnpm), but that is your call, and this plugin does not recommend it.
@@ -122,7 +122,7 @@ A stethoscope icon appears in the left sidebar; the plugin's bundle page in the 
 
 ```bash
 pnpm install
-pnpm run check        # typecheck + 23 test files / 501 cases + build
+pnpm run check        # typecheck + 24 test files / 505 cases + build
 pnpm run build        # tsdown: ESM for the Host, CJS + ModuleLoader for the Client
 ```
 
@@ -135,7 +135,7 @@ src/
   providers/    child-process wrapper, recent-error reader, adapters for both plugins
   privacy/      redaction whitelist
   client/       React panel, sidebar entry, i18n, styles
-tests/          23 spec files
+tests/          24 spec files
 docs/           architecture notes
 ```
 

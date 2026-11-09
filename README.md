@@ -100,7 +100,7 @@ dsh plugin --profile desktop add dsh-provider-doctor
 pnpm 11 默认启用 `minimumReleaseAge` 安全策略：发布不满 24 小时的版本不会被 `add <name>`、`@latest`、`@*` 选中，只会装上上一个成熟版本，并在输出里补一句 `(0.1.3 is available)` 之类的提示——很容易被当成噪音忽略，然后以为新版装不上。这不是安装失败。刚发版后想立刻装上新版，把版本写死：
 
 ```bash
-dsh plugin --profile desktop add dsh-provider-doctor@0.1.6
+dsh plugin --profile desktop add dsh-provider-doctor@0.1.7
 ```
 
 最新版本号用 `npm view dsh-provider-doctor version` 查，不要照抄这里的数字。也可以在命令后加 `--config.minimum-release-age=0` 显式关掉这条策略（`dsh plugin add` 会把它透传给 pnpm），但那是你自己的取舍，本插件不推荐。
@@ -122,7 +122,7 @@ dsh plugin --profile desktop add dsh-provider-doctor@0.1.6
 
 ```bash
 pnpm install
-pnpm run check        # typecheck + 23 个测试文件 / 501 个用例 + build
+pnpm run check        # typecheck + 24 个测试文件 / 505 个用例 + build
 pnpm run build        # tsdown：Host 走 ESM，Client 走 CJS + ModuleLoader 包装
 ```
 
@@ -135,7 +135,7 @@ src/
   providers/    子进程包装、最近错误读取、两个插件的适配器
   privacy/      脱敏白名单
   client/       React 面板、侧栏入口、国际化、样式
-tests/          23 个 spec 文件
+tests/          24 个 spec 文件
 docs/           架构说明
 ```
 
