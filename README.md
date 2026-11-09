@@ -1,3 +1,5 @@
+<p><img src="assets/logo.webp" width="96" height="96" alt="dsh-provider-doctor logo"></p>
+
 # DSH Provider Doctor
 
 一个只读的模型连接诊断器。当 DeepSeek Harness 里某个 provider（WorkBuddy、WorkBuddy AI、ZCode CLI）突然用不了时，它会沿着一条固定的链路逐环取证，告诉你**断在哪一环**，以及**下一步该做什么**。

@@ -1,3 +1,5 @@
+<p><img src="assets/logo.webp" width="96" height="96" alt="dsh-provider-doctor logo"></p>
+
 # DSH Provider Doctor
 
 A read-only connection diagnostician. When a model provider in DeepSeek Harness (WorkBuddy, WorkBuddy AI, ZCode CLI) stops working, it walks a fixed chain and tells you **which link is broken** and **what to do next**.

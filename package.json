@@ -40,14 +40,16 @@
     },
     "./client": "./lib/client.js",
     "./cordis.patch.yml": "./cordis.patch.yml",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./icon": "./assets/logo.webp"
   },
   "files": [
     "lib",
     "cordis.patch.yml",
     "README.md",
     "README.en.md",
-    "LICENSE"
+    "LICENSE",
+    "assets/logo.webp"
   ],
   "license": "MIT",
   "dsh": {
@@ -92,5 +94,6 @@
     "tsdown": "^0.22.2",
     "typescript": "^5.9.3",
     "vitest": "^4.1.8"
-  }
+  },
+  "icon": "./assets/logo.webp"
 }
