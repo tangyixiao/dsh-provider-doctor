@@ -120,7 +120,7 @@ A stethoscope icon appears in the left sidebar; the plugin's bundle page in the 
 
 ```bash
 pnpm install
-pnpm run check        # typecheck + 23 test files / 498 cases + build
+pnpm run check        # typecheck + 23 test files / 501 cases + build
 pnpm run build        # tsdown: ESM for the Host, CJS + ModuleLoader for the Client
 ```
 

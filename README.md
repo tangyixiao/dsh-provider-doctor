@@ -120,7 +120,7 @@ dsh plugin --profile desktop add dsh-provider-doctor@0.1.4
 
 ```bash
 pnpm install
-pnpm run check        # typecheck + 23 个测试文件 / 498 个用例 + build
+pnpm run check        # typecheck + 23 个测试文件 / 501 个用例 + build
 pnpm run build        # tsdown：Host 走 ESM，Client 走 CJS + ModuleLoader 包装
 ```
 

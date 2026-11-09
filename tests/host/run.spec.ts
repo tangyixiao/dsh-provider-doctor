@@ -151,8 +151,7 @@ describe('runDiagnostics', () => {
     expect(JSON.stringify(credential)).not.toMatch(/signed out|not signed in/i)
   })
 
-  it('degrades a throwing adapter to one unknown check and keeps the others reporting', async () => {
-    const run = await runDiagnostics(baseInput({
+  it('degrades a throwing adapter to one unknown check and keeps the others reporting', async () => {    const run = await runDiagnostics(baseInput({
       adapters: [
         adapterWith('workbuddy', ['plugin-installed'], async () => {
           throw new Error('adapter exploded')
@@ -213,6 +212,41 @@ describe('runDiagnostics', () => {
       })],
     }))
     expect(seen).toEqual([false])
+  })
+
+  it('keeps the offline budget short', async () => {
+    const budgets: number[] = []
+    await runDiagnostics(baseInput({
+      adapters: [adapterWith('workbuddy', [], async (context) => {
+        budgets.push(context.budgetMs)
+        return []
+      })],
+    }))
+    expect(budgets).toEqual([5000])
+  })
+
+  it('gives a connection check room for a cold CLI start', async () => {
+    const budgets: number[] = []
+    await runDiagnostics(baseInput({
+      options: { connectionCheck: true },
+      adapters: [adapterWith('workbuddy', [], async (context) => {
+        budgets.push(context.budgetMs)
+        return []
+      })],
+    }))
+    expect(budgets).toEqual([30_000])
+  })
+
+  it('lets an offline budget too small to matter still be overridden by the caller', async () => {
+    const budgets: number[] = []
+    await runDiagnostics(baseInput({
+      options: { connectionCheck: true, probeBudgetMs: 700 },
+      adapters: [adapterWith('workbuddy', [], async (context) => {
+        budgets.push(context.budgetMs)
+        return []
+      })],
+    }))
+    expect(budgets).toEqual([700])
   })
 
   it('passes the profile directory when one was resolved', async () => {

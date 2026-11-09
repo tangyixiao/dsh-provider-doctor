@@ -41,9 +41,9 @@ export interface RunInput {
 export interface RunOptions {
   /** Run side-effecting checks (the provider connection check). Default false. */
   connectionCheck?: boolean
-  /** Budget for one adapter's whole set. Default 8000 ms. */
+  /** Budget for one adapter's whole set. Default 8000 ms offline, 45000 ms on a connection check. */
   adapterBudgetMs?: number
-  /** Budget for one individual probe inside an adapter. Default 5000 ms. */
+  /** Budget for one individual probe inside an adapter. Default 5000 ms offline, 30000 ms on a connection check. */
   probeBudgetMs?: number
   /**
    * The DSH range to hold the host to. Defaults to this build's own
@@ -59,11 +59,26 @@ export interface RunResult {
   failures: { provider: string; message: string }[]
 }
 
-/** Default per-adapter budget: long enough for one CLI start, short enough to cancel. */
+/** Default per-adapter budget for an offline run: fast, and bounded tightly. */
 const DEFAULT_ADAPTER_BUDGET_MS = 8000
 
-/** Default per-probe budget inside an adapter. */
+/** Default per-probe budget inside an offline adapter. */
 const DEFAULT_PROBE_BUDGET_MS = 5000
+
+/**
+ * Per-adapter budget for a connection check.
+ *
+ * A connection check starts the provider's own CLI, and on a cold machine that
+ * is dominated by module loading rather than by the work itself: the ZCode
+ * bridge's first run measured ~8.4 s while a warm run took ~2.6 s. Holding it to
+ * the offline budget turned a healthy provider into eight `timed_out` rows, which
+ * is honest but says nothing useful. The offline numbers stay where they are —
+ * that path must remain cheap.
+ */
+const DEFAULT_CONNECTION_ADAPTER_BUDGET_MS = 45_000
+
+/** Per-probe budget for a connection check, sized for a cold CLI start. */
+const DEFAULT_CONNECTION_PROBE_BUDGET_MS = 30_000
 
 /**
  * Run every adapter and assemble the reports.
@@ -75,9 +90,11 @@ const DEFAULT_PROBE_BUDGET_MS = 5000
  * @returns One report per adapter that settled, plus the failures.
  */
 export async function runDiagnostics(input: RunInput): Promise<RunResult> {
-  const adapterBudgetMs = input.options?.adapterBudgetMs ?? DEFAULT_ADAPTER_BUDGET_MS
-  const probeBudgetMs = input.options?.probeBudgetMs ?? DEFAULT_PROBE_BUDGET_MS
   const connectionCheck = input.options?.connectionCheck ?? false
+  const adapterBudgetMs = input.options?.adapterBudgetMs
+    ?? (connectionCheck ? DEFAULT_CONNECTION_ADAPTER_BUDGET_MS : DEFAULT_ADAPTER_BUDGET_MS)
+  const probeBudgetMs = input.options?.probeBudgetMs
+    ?? (connectionCheck ? DEFAULT_CONNECTION_PROBE_BUDGET_MS : DEFAULT_PROBE_BUDGET_MS)
 
   // The two host-level links are the same evidence for every provider, so they
   // are collected once and repeated in each report. Collecting them per adapter
