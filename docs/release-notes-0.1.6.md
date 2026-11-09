@@ -16,4 +16,13 @@ Measured on Windows with Node v26.9.0 against DSH 0.2.2-rc.1, in an isolated pro
 - The fix is covered by three new cases in `tests/host/run.spec.ts`, which assert the adapter's own budget rather than a comment: 5000 ms on an offline run, 30000 ms when the connection check is requested, and an explicit override still honoured.
 - `npx tsc -p tsconfig.json --noEmit` and `npx tsc -p tsconfig.client.json --noEmit` both exit 0. `npx vitest run` is 23 files / 501 cases green.
 
-These are local automated checks. They do not establish that the 0.1.6 tarball has been installed in an isolated host, that the Windows Desktop interaction has been accepted, or that other operating systems and DSH versions have been tested for this release. npm publication, the GitHub Release, and market updates require separate verification after they occur.
+### After publication
+
+Run against the published 0.1.6 package (not a local tarball) in an isolated DSH home with its own profile, WorkBuddy 0.1.15 and ZCode 0.6.0 installed, DSH 0.2.2-rc.1 on Windows:
+
+- Cold first `/connect`: **6613 ms**, `workbuddy pass=8 timeout=0`, `workbuddy-ai pass=8 timeout=0`, `zcode-cli pass=9 timeout=0`. The 8.35 s / eight-timeouts result no longer reproduces.
+- Offline `/diagnose`: 844 ms, three reports, no failures, and **zero `zcode.cjs app-server` child processes before or after** — the offline run stays offline.
+- `/share`: `version=0.1.6`, three reports, every readiness field populated; a scan of the document for `C:\Users`, `D:\tmp`, `tangy`, `AppData`, `token`, `pid`, `/profiles/` and `\.zcode` returned zero hits.
+- The desktop panel rendered in a browser: sidebar entry present, ten checks per provider with status, cost and evidence labels, the sanitised-report card, no console errors.
+
+What is still not established: the Windows Desktop interaction here was a browser session against an isolated headless host, not the packaged desktop app; and this release has not been exercised on macOS or Linux beyond the CI job that builds and tests it.
