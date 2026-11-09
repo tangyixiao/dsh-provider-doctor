@@ -83,7 +83,13 @@ export const PANEL_CSS = `
 [${STYLE_ATTRIBUTE}] .pd-button[data-variant='primary'] {
   border-color: transparent;
   background: var(--dsw-alias-button-primary-fill);
-  color: var(--dsw-alias-label-inverse, #fff);
+  /*
+   * The host pairs this fill with label-primary-foreground, and the pair flips
+   * between light and dark: the fill is near-black in one theme and near-white
+   * in the other, and the foreground follows it. Hard-coding white (or black)
+   * leaves the label invisible in one of the two themes.
+   */
+  color: var(--dsw-alias-label-primary-foreground, currentColor);
 }
 
 [${STYLE_ATTRIBUTE}] .pd-button[data-variant='primary']:hover:not(:disabled) {
@@ -137,7 +143,7 @@ export const PANEL_CSS = `
 [${STYLE_ATTRIBUTE}] .pd-tabs {
   display: flex;
   gap: 4px;
-  border-bottom: 1px solid var(--dsw-alias-separator-primary);
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
   flex-wrap: wrap;
 }
 
@@ -192,7 +198,7 @@ export const PANEL_CSS = `
   border-radius: var(--dsw-radius-md);
 }
 
-[${STYLE_ATTRIBUTE}] .pd-link + .pd-link { border-top: 1px solid var(--dsw-alias-separator-primary); }
+[${STYLE_ATTRIBUTE}] .pd-link + .pd-link { border-top: 1px solid var(--dsw-alias-border-l1); }
 
 [${STYLE_ATTRIBUTE}] .pd-link-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 
@@ -252,7 +258,7 @@ export const PANEL_CSS = `
 [${STYLE_ATTRIBUTE}] .pd-steps li + li { margin-top: 2px; }
 
 [${STYLE_ATTRIBUTE}] .pd-details {
-  border-top: 1px solid var(--dsw-alias-separator-primary);
+  border-top: 1px solid var(--dsw-alias-border-l1);
   padding-top: 8px;
 }
 
@@ -310,7 +316,7 @@ export const PANEL_CSS = `
 [${STYLE_ATTRIBUTE}] .pd-footer {
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid var(--dsw-alias-separator-primary);
+  border-top: 1px solid var(--dsw-alias-border-l1);
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
