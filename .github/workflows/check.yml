@@ -4,7 +4,7 @@ name: Offline checks
 # beyond the package registry, and no fixture beyond the repository itself.
 on:
   push:
-    branches: ['**']
+    branches: [main]
   pull_request:
 
 permissions:
