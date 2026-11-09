@@ -33,11 +33,13 @@ Provider Doctor 的做法是：**每一环单独出一条结论，每条结论�
 | 5 | `provider-registered` | provider 注册到 LLM 路由上了吗 | 是（只读） |
 | 6 | `provider-configurable` | 它在配置目录里有条目吗 | 是（只读） |
 | 7 | `credential-metadata` | 凭据在本地解析得出来吗 | **否**，需要连接检查 |
-| 8 | `model-catalog` | 模型目录读得出来吗，非空吗 | 是（只读） |
+| 8 | `model-catalog` | 模型目录读得出来吗，非空吗 | WorkBuddy 是（只读）；ZCode **否**，见下 |
 | 9 | `provider-diagnostic` | 插件自己的诊断命令说什么 | **否**，需要连接检查 |
 | 10 | `recent-error` | 上一次请求的结局有记录吗 | 是（只读） |
 
 第 7 和第 9 项会被标记为「需要启动进程」。在默认的基础检查里它们显示「未检查」，并且明确写着为什么没检查——而不是假装通过。
+
+第 8 项对两个 provider 不一样，这一点值得单独说：WorkBuddy 的 `listModels()` 是在宿主进程里查缓存，纯读；**ZCode 的 `listModels()` 会先把 ZCode 的 app-server 拉起来**——`readCatalog()` 里是 `ensureStarted()` → `session/create` → `session/close`，会话关了但常驻客户端留着。所以基础检查对 ZCode 不去读模型目录，只标注「读它会启动它自己的客户端」，等你点了连接检查才读。这条是实测出来的（观察宿主子进程），不是推断。
 
 ## 两个按钮，两种代价
 
@@ -45,12 +47,14 @@ Provider Doctor 的做法是：**每一环单独出一条结论，每条结论�
 
 只读，不联网，不启动任何子进程。它读的是宿主内存里的服务快照、profile 的 `package.json`、以及本地留下的诊断记录。耗时通常在几十毫秒量级。
 
+这句话是有测试兜着的：`tests/providers/zcode-diagnose.spec.ts` 给 fake profile 里的 CLI 装了一个「被调用就写文件」的探针，然后断言基础检查跑完之后那个文件**不存在**。
+
 **连接检查**（需要你主动点）
 
 在此基础上额外做两件事：
 
-1. 调用插件自己的诊断命令——WorkBuddy 是 `doctor --json --provider <id>`，ZCode 是 `doctor --json`。这两条命令本身都不发模型请求。
-2. 由此拿到凭据状态和模型目录的真实读数。
+1. 调用插件自己的诊断命令——WorkBuddy 是 `doctor --json --provider <id>`，ZCode 是 `doctor --json`。这两条命令本身都不发模型请求，也不会消耗任何额度。
+2. 由此拿到凭据状态和模型目录的真实读数。ZCode 这一步还会起它的 app-server —— 这是读目录的代价，不是额外的探测。
 
 它需要启动一个 Node 子进程，所以按钮上会写明这一点。超时、取消、子进程被杀，都会被记为对应的状态，**不会**被当成「登录失败」。
 
@@ -116,7 +120,7 @@ dsh plugin --profile desktop add dsh-provider-doctor@0.1.4
 
 ```bash
 pnpm install
-pnpm run check        # typecheck + 22 个测试文件 / 486 个用例 + build
+pnpm run check        # typecheck + 23 个测试文件 / 498 个用例 + build
 pnpm run build        # tsdown：Host 走 ESM，Client 走 CJS + ModuleLoader 包装
 ```
 
@@ -129,7 +133,7 @@ src/
   providers/    子进程包装、最近错误读取、两个插件的适配器
   privacy/      脱敏白名单
   client/       React 面板、侧栏入口、国际化、样式
-tests/          22 个 spec 文件
+tests/          23 个 spec 文件
 docs/           架构说明
 ```
 

@@ -33,6 +33,30 @@ const OFFLINE = 'offline' as const
 /** The maximum number of model ids quoted into a detail object. */
 const MODEL_SAMPLE_SIZE = 8
 
+/**
+ * What the catalog check needs.
+ *
+ * `requested` exists because "list this provider's models" is not always an
+ * in-process read. Some adapters answer it by starting their own client and
+ * asking it — the ZCode bridge starts a resident `app-server` and opens a probe
+ * session. That is a side effect, so the caller has to say whether the user
+ * asked for one.
+ */
+export interface CatalogInput {
+  /** The `llm` service, when this host mounted one. */
+  llm: LlmLike | undefined
+  /** The provider id whose catalog to read. */
+  providerId: string
+  /** `false` when the registration check proved no adapter exists. */
+  registered?: boolean
+  /**
+   * `false` when reading this provider's catalog would start a process. The
+   * check then reports `not_checked` instead of quietly spawning something on a
+   * path the UI described as offline.
+   */
+  requested?: boolean
+}
+
 /** What the registration check needs. */
 export interface RegistrationInput {
   /** The `llm` service, when this host mounted one. */
@@ -210,12 +234,7 @@ export function providerConfigurableCheck(input: Omit<RegistrationInput, 'plugin
  * @returns `pass` non-empty, `fail` empty, `unknown` when unreadable, or
  * `not_checked` when there is no route to read from.
  */
-export async function modelCatalogCheck(input: {
-  llm: LlmLike | undefined
-  providerId: string
-  /** `false` when the registration check proved no adapter exists. */
-  registered?: boolean
-}): Promise<CheckResult> {
+export async function modelCatalogCheck(input: CatalogInput): Promise<CheckResult> {
   if (input.llm === undefined) {
     return unknown({
       id: 'model-catalog',
@@ -239,6 +258,21 @@ export async function modelCatalogCheck(input: {
       summary: `No route adapter is registered for "${input.providerId}", so it has no model catalog to read.`,
       nextSteps: ['Fix the registration failure above; the catalog follows from it.'],
       details: { provider: input.providerId },
+    })
+  }
+
+  if (input.requested === false) {
+    return notChecked({
+      id: 'model-catalog',
+      evidenceKind: 'unavailable',
+      source: 'live_host',
+      cost: OFFLINE,
+      reasonCode: 'not_requested',
+      summary:
+        `Reading the catalog of "${input.providerId}" would start its own client, ` +
+        'so the doctor did not read it on an offline run.',
+      nextSteps: ['Use "Run the connection check" to read this provider\'s model catalog.'],
+      details: { provider: input.providerId, startsProcess: true },
     })
   }
 

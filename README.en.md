@@ -33,11 +33,13 @@ Every provider shows ten checks in this order, which is also the direction a fau
 | 5 | `provider-registered` | Is the provider registered on the LLM route? | yes (read-only) |
 | 6 | `provider-configurable` | Does it have an entry in the configuration directory? | yes (read-only) |
 | 7 | `credential-metadata` | Can the credential be resolved locally? | **no**, needs a connection check |
-| 8 | `model-catalog` | Can the model catalog be read, and is it non-empty? | yes (read-only) |
+| 8 | `model-catalog` | Can the model catalog be read, and is it non-empty? | WorkBuddy yes (read-only); ZCode **no**, see below |
 | 9 | `provider-diagnostic` | What does the plugin's own diagnostic command report? | **no**, needs a connection check |
 | 10 | `recent-error` | Is there a record of how the last request ended? | yes (read-only) |
 
 Checks 7 and 9 are labelled "starts a process". Under the default basic check they read "not checked" and say why — they are not painted green.
+
+Check 8 differs by provider, and the difference is worth stating. WorkBuddy answers `listModels()` from an in-process cache; it is a plain read. **ZCode answers it by starting its app-server** — `readCatalog()` does `ensureStarted()` → `session/create` → `session/close`, and the probe session closes while the resident client stays. So the basic check does not read ZCode's catalog at all: it says reading it would start its own client, and waits for you to run the connection check. This was established by watching the host's child processes, not inferred.
 
 ## Two buttons, two costs
 
@@ -45,12 +47,14 @@ Checks 7 and 9 are labelled "starts a process". Under the default basic check th
 
 Read-only. No network, no child process. It reads host service snapshots, the profile's `package.json`, and local diagnostic records. Typically tens of milliseconds.
 
+That sentence is backed by a test: `tests/providers/zcode-diagnose.spec.ts` puts a "touch this file when executed" tripwire inside the fake profile's CLI, then asserts the file does not exist after a basic run finishes.
+
 **Connection check** (you have to ask for it)
 
 Adds two things:
 
-1. It runs the plugin's own diagnostic command — `doctor --json --provider <id>` for WorkBuddy, `doctor --json` for ZCode. Neither sends a model request.
-2. That yields the real reading for credential state and model catalog.
+1. It runs the plugin's own diagnostic command — `doctor --json --provider <id>` for WorkBuddy, `doctor --json` for ZCode. Neither sends a model request, and neither spends any quota.
+2. That yields the real reading for credential state and model catalog. For ZCode this also starts its app-server — that is the price of reading the catalog, not a separate probe.
 
 It spawns one Node child process, and the button says so. Timeouts, cancellations and killed children are reported as exactly that — **never** as a sign-out.
 
@@ -116,7 +120,7 @@ A stethoscope icon appears in the left sidebar; the plugin's bundle page in the 
 
 ```bash
 pnpm install
-pnpm run check        # typecheck + 22 test files / 486 cases + build
+pnpm run check        # typecheck + 23 test files / 498 cases + build
 pnpm run build        # tsdown: ESM for the Host, CJS + ModuleLoader for the Client
 ```
 
@@ -129,7 +133,7 @@ src/
   providers/    child-process wrapper, recent-error reader, adapters for both plugins
   privacy/      redaction whitelist
   client/       React panel, sidebar entry, i18n, styles
-tests/          22 spec files
+tests/          23 spec files
 docs/           architecture notes
 ```
 

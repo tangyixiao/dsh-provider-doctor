@@ -338,8 +338,16 @@ export const ZCODE_ADAPTER: ProviderAdapter = {
 
     if (!context.connectionCheck) {
       checks.push(await cliPresence(cliPath))
+      // The ZCode bridge answers `listModels` by starting its resident
+      // `app-server` and opening a probe session, so an offline run must not ask
+      // for the catalog: the UI says this path starts no process.
       checks.push(
-        await modelCatalogCheck({ llm: context.host.llm, providerId: ZCODE_PROVIDER, registered }),
+        await modelCatalogCheck({
+          llm: context.host.llm,
+          providerId: ZCODE_PROVIDER,
+          registered,
+          requested: false,
+        }),
       )
       checks.push(
         notChecked({
@@ -377,7 +385,12 @@ export const ZCODE_ADAPTER: ProviderAdapter = {
         }),
       )
       checks.push(
-        await modelCatalogCheck({ llm: context.host.llm, providerId: ZCODE_PROVIDER, registered }),
+        await modelCatalogCheck({
+          llm: context.host.llm,
+          providerId: ZCODE_PROVIDER,
+          registered,
+          requested: context.connectionCheck,
+        }),
       )
       checks.push(
         fail({
@@ -397,8 +410,15 @@ export const ZCODE_ADAPTER: ProviderAdapter = {
 
     const reading = await readCli(cliPath, ['doctor', '--json'], context)
     checks.push(await credentialCheckFrom(reading))
+    // A requested connection check may start the client, so reading the catalog
+    // is allowed here: the user already accepted a process for this run.
     checks.push(
-      await modelCatalogCheck({ llm: context.host.llm, providerId: ZCODE_PROVIDER, registered }),
+      await modelCatalogCheck({
+        llm: context.host.llm,
+        providerId: ZCODE_PROVIDER,
+        registered,
+        requested: true,
+      }),
     )
     checks.push(diagnosticCheckFrom(reading))
     checks.push(recentErrorNotRecorded())
