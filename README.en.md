@@ -21,7 +21,7 @@
 Desktop: install the release `.tgz` through Extensions → Plugin Management → Add Plugin. For a Web profile you explicitly control:
 
 ```sh
-dsh plugin --profile web add dsh-provider-doctor@0.1.7
+dsh plugin --profile web add dsh-provider-doctor@0.1.8
 ```
 
 Open Provider Doctor in the sidebar and start with the basic check. A connection check explicitly runs provider diagnostics; reading a ZCode catalog may start its app-server.
@@ -30,7 +30,7 @@ Open Provider Doctor in the sidebar and start with the basic check. A connection
 
 | Item | Current source of truth |
 | --- | --- |
-| Source version | `0.1.7` · 以 [package.json](package.json) 为准 |
+| Source version | `0.1.8` · 以 [package.json](package.json) 为准 |
 | Distribution | `npm` · [Releases](https://github.com/tangyixiao/dsh-provider-doctor/releases) |
 | DSH | `0.2.2-rc.1` |
 | Node.js | `^22.19.0 \|\| >=24.0.0` |
