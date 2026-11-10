@@ -21,7 +21,7 @@
 Desktop：从发行页下载 `.tgz`，在“扩展 → 插件管理 → 添加插件”中安装。命令行示例用于你明确控制的 Web profile：
 
 ```sh
-dsh plugin --profile web add dsh-provider-doctor@0.1.7
+dsh plugin --profile web add dsh-provider-doctor@0.1.8
 ```
 
 打开左侧 Provider Doctor，先运行基础检查。只有显式选择连接检查才会运行 provider 的诊断命令；ZCode 读取目录可能启动 app-server。
@@ -30,7 +30,7 @@ dsh plugin --profile web add dsh-provider-doctor@0.1.7
 
 | 项目 | 当前依据 |
 | --- | --- |
-| 源码版本 | `0.1.7` · 以 [package.json](package.json) 为准 |
+| 源码版本 | `0.1.8` · 以 [package.json](package.json) 为准 |
 | 分发方式 | `npm` · [Releases](https://github.com/tangyixiao/dsh-provider-doctor/releases) |
 | DSH | `0.2.2-rc.1` |
 | Node.js | `^22.19.0 \|\| >=24.0.0` |
