@@ -80,6 +80,12 @@
           "update-types": [
             "version-update:semver-major"
           ]
+        },
+        {
+          "update-types": [
+            "version-update:semver-major"
+          ],
+          "dependency-name": "jsdom"
         }
       ]
     }
