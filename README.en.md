@@ -1,8 +1,10 @@
-<p align="center"><img src="assets/logo.webp" width="128" height="128" alt="DSH Provider Doctor logo"></p>
+<p align="center"><img src="assets/logo.webp" width="192" height="192" alt="DSH Provider Doctor logo"></p>
 
 <h1 align="center">DSH Provider Doctor</h1>
 
 <p align="center">Trace host, installation, registration, credential and catalog evidence to locate a broken DSH model connection.</p>
+
+<p align="center"><a href="https://github.com/tangyixiao/dsh-provider-doctor"><img src="docs/assets/banner-en.svg" width="100%" alt="DSH Provider Doctor — Project and usage guide"></a></p>
 
 <p align="center"><a href="README.md">简体中文</a> · <a href="README.en.md">English</a></p>
 

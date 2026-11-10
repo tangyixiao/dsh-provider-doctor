@@ -1,8 +1,10 @@
-<p align="center"><img src="assets/logo.webp" width="128" height="128" alt="DSH Provider Doctor logo"></p>
+<p align="center"><img src="assets/logo.webp" width="192" height="192" alt="DSH Provider Doctor logo"></p>
 
 <h1 align="center">DSH Provider Doctor</h1>
 
 <p align="center">沿着宿主、安装、注册、凭据与目录逐环取证，定位 DSH 模型连接断在哪里。</p>
+
+<p align="center"><a href="https://github.com/tangyixiao/dsh-provider-doctor"><img src="docs/assets/banner-zh-CN.svg" width="100%" alt="DSH Provider Doctor — 查看项目与使用说明"></a></p>
 
 <p align="center"><a href="README.md">简体中文</a> · <a href="README.en.md">English</a></p>
 
