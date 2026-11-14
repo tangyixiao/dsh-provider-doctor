@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { checkEngineRange } from '../../src/host/runtime.ts'
+import { readFileSync } from 'node:fs'
 
 /**
  * The range checker is a hand-written subset of npm's grammar, so the tests pin
@@ -8,6 +9,12 @@ import { checkEngineRange } from '../../src/host/runtime.ts'
  * shapes a future host version takes.
  */
 describe('checkEngineRange', () => {
+  it('accepts rc.3 with the shipped runtime requirement and keeps unverified builds out', () => {
+    const manifest = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'))
+    expect(checkEngineRange('0.2.2-rc.3', manifest.engines.dsh)).toEqual({ ok: true })
+    expect(checkEngineRange('0.2.2-rc.2', manifest.engines.dsh)).toEqual({ ok: false, reason: 'out_of_range' })
+    expect(checkEngineRange('0.3.0', manifest.engines.dsh)).toEqual({ ok: false, reason: 'out_of_range' })
+  })
   const range = '0.2.2-rc.1'
 
   it('accepts the exact verified build', () => {
