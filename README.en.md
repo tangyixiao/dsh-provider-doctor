@@ -63,3 +63,7 @@ The external chart uses real star records and may be cached or unavailable; no d
 [Software license](LICENSE) · [Logo artwork and attribution](assets/NOTICE.md)
 
 Software retains its existing license. Whale-girl derivative artwork is separately CC BY-NC-SA 4.0 with the attribution chain for 上善, ZipZipPipe and Small-tailqwq.
+
+## Project website
+
+Download or clone this repository, then open the [English homepage](project-website/site/en/index.html) or [中文首页](project-website/site/index.html) in your browser. Both versions work offline.

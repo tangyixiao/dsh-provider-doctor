@@ -1,0 +1,136 @@
+{
+  "meta": {
+    "description": "按宿主、插件安装、提供方注册、凭据和模型目录逐层检查，查看每一步取得的诊断结果。"
+  },
+  "pages": {
+    "home": {
+      "title": "找到 DSH 模型连接中断的那一步 · {project}"
+    },
+    "features": {
+      "title": "项目特点 · {project}",
+      "description": "按宿主、插件安装、提供方注册、凭据和模型目录逐层检查，查看每一步取得的诊断结果。"
+    },
+    "download": {
+      "title": "开始使用 · {project}",
+      "description": "从发行页取得 .tgz，在 DSH Desktop 的插件管理中添加并启用。"
+    },
+    "community": {
+      "title": "参与项目 · {project}",
+      "description": "从这里找到使用说明、已有讨论和项目变更。"
+    }
+  },
+  "nav": {
+    "home": "首页",
+    "features": "项目特点",
+    "download": "开始使用",
+    "community": "参与项目"
+  },
+  "ui": {
+    "skip_link": "跳转到主要内容",
+    "navigation": "主导航",
+    "open_navigation": "打开导航",
+    "close_navigation": "关闭导航",
+    "language": "选择语言",
+    "theme": "选择主题",
+    "light": "浅色",
+    "dark": "深色",
+    "system": "跟随系统",
+    "platforms": "支持的平台",
+    "github": "GitHub",
+    "view_image": "查看完整演示图",
+    "feature_more": "查看详情",
+    "download": "阅读诊断指南",
+    "release_notes": "仓库源代码",
+    "documentation": "使用文档",
+    "source": "仓库源代码",
+    "illustration": "使用路径",
+    "license": "MIT"
+  },
+  "hero": {
+    "title": [
+      "找到 DSH 模型连接中断的那一步"
+    ],
+    "description": [
+      "按宿主、插件安装、提供方注册、凭据和模型目录逐层检查，查看每一步取得的诊断结果。"
+    ],
+    "primary_action": "阅读诊断指南",
+    "secondary_action": "查看详情"
+  },
+  "preview": {
+    "caption": "使用路径",
+    "tabs": [
+      {
+        "label": "开始使用",
+        "icon": "book"
+      }
+    ],
+    "items": [
+      {
+        "title": "安装插件",
+        "description": "从发行页取得 .tgz，在 DSH Desktop 的插件管理中添加并启用。",
+        "icon": "book"
+      },
+      {
+        "title": "读取检查结果",
+        "description": "先运行基础检查，沿着第一个失败环节排查。标成 not checked 的项目可按需要另行检查。",
+        "icon": "link"
+      }
+    ]
+  },
+  "features": {
+    "title": "项目特点",
+    "groups": [
+      {
+        "title": "基础检查",
+        "description": "从 DSH 侧栏打开 Provider Doctor，先查看宿主与提供方的注册信息。",
+        "detail": "",
+        "icon": "layers"
+      },
+      {
+        "title": "按需检查连接",
+        "description": "手动选择后才会执行提供方诊断命令。读取 ZCode 目录可能启动 app-server，无需发送模型生成请求。",
+        "detail": "",
+        "icon": "book"
+      }
+    ]
+  },
+  "getting_started": {
+    "title": "开始使用 · {project}",
+    "steps": [
+      {
+        "title": "安装插件",
+        "description": "从发行页取得 .tgz，在 DSH Desktop 的插件管理中添加并启用。",
+        "icon": "book"
+      },
+      {
+        "title": "读取检查结果",
+        "description": "先运行基础检查，沿着第一个失败环节排查。标成 not checked 的项目可按需要另行检查。",
+        "icon": "link"
+      }
+    ]
+  },
+  "community": {
+    "title": "参与 · {project}",
+    "description": "从这里找到使用说明、已有讨论和项目变更。",
+    "links": [
+      {
+        "label": "帮助与反馈",
+        "description": "查看已报告的问题，或描述复现步骤。",
+        "icon": "book"
+      },
+      {
+        "label": "参与讨论",
+        "description": "查看已有话题，分享使用方法或改进建议。",
+        "icon": "link"
+      },
+      {
+        "label": "查看项目变更",
+        "description": "查看已有拉取请求或准备贡献。",
+        "icon": "code"
+      }
+    ]
+  },
+  "footer": {
+    "copyright": "{copyright}"
+  }
+}

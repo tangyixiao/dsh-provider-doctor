@@ -1,0 +1,136 @@
+{
+  "meta": {
+    "description": "Follow the path from host and installation through provider registration, credentials and model discovery to find the stage that needs attention."
+  },
+  "pages": {
+    "home": {
+      "title": "Find the break in a DSH model connection · {project}"
+    },
+    "features": {
+      "title": "Features · {project}",
+      "description": "Follow the path from host and installation through provider registration, credentials and model discovery to find the stage that needs attention."
+    },
+    "download": {
+      "title": "Get started · {project}",
+      "description": "Download the release .tgz and add it in DSH Desktop plugin management."
+    },
+    "community": {
+      "title": "Community · {project}",
+      "description": "Find usage guidance, follow discussions and review changes to this project."
+    }
+  },
+  "nav": {
+    "home": "Home",
+    "features": "Features",
+    "download": "Get started",
+    "community": "Community"
+  },
+  "ui": {
+    "skip_link": "Skip to main content",
+    "navigation": "Main navigation",
+    "open_navigation": "Open navigation",
+    "close_navigation": "Close navigation",
+    "language": "Choose language",
+    "theme": "Choose theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "platforms": "Supported platforms",
+    "github": "GitHub",
+    "view_image": "View full illustration",
+    "feature_more": "Explore features",
+    "download": "Read the diagnostic guide",
+    "release_notes": "Source repository",
+    "documentation": "Documentation",
+    "source": "Source repository",
+    "illustration": "First steps",
+    "license": "MIT"
+  },
+  "hero": {
+    "title": [
+      "Find the break in a DSH model connection"
+    ],
+    "description": [
+      "Follow the path from host and installation through provider registration, credentials and model discovery to find the stage that needs attention."
+    ],
+    "primary_action": "Read the diagnostic guide",
+    "secondary_action": "Explore features"
+  },
+  "preview": {
+    "caption": "First steps",
+    "tabs": [
+      {
+        "label": "Get started",
+        "icon": "book"
+      }
+    ],
+    "items": [
+      {
+        "title": "Install the plugin",
+        "description": "Download the release .tgz and add it in DSH Desktop plugin management.",
+        "icon": "book"
+      },
+      {
+        "title": "Read the first failure",
+        "description": "Run the basic checks, then investigate the first failed stage. A stage marked not checked can be inspected separately when needed.",
+        "icon": "link"
+      }
+    ]
+  },
+  "features": {
+    "title": "Project features",
+    "groups": [
+      {
+        "title": "Start with local checks",
+        "description": "Open Provider Doctor in the DSH sidebar to inspect the host and registered provider.",
+        "detail": "",
+        "icon": "layers"
+      },
+      {
+        "title": "Probe a connection on demand",
+        "description": "Provider commands run when you select the connection check. Fetching a ZCode catalog may start app-server without sending a model generation request.",
+        "detail": "",
+        "icon": "book"
+      }
+    ]
+  },
+  "getting_started": {
+    "title": "Get started · {project}",
+    "steps": [
+      {
+        "title": "Install the plugin",
+        "description": "Download the release .tgz and add it in DSH Desktop plugin management.",
+        "icon": "book"
+      },
+      {
+        "title": "Read the first failure",
+        "description": "Run the basic checks, then investigate the first failed stage. A stage marked not checked can be inspected separately when needed.",
+        "icon": "link"
+      }
+    ]
+  },
+  "community": {
+    "title": "Community · {project}",
+    "description": "Find usage guidance, follow discussions and review changes to this project.",
+    "links": [
+      {
+        "label": "Help and feedback",
+        "description": "Browse existing reports or describe a reproducible problem.",
+        "icon": "book"
+      },
+      {
+        "label": "Join the discussion",
+        "description": "Read existing topics or share questions and ideas.",
+        "icon": "link"
+      },
+      {
+        "label": "Review changes",
+        "description": "Review open pull requests or prepare a contribution.",
+        "icon": "code"
+      }
+    ]
+  },
+  "footer": {
+    "copyright": "{copyright}"
+  }
+}
