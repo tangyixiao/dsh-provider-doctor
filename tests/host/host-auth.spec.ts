@@ -1,16 +1,16 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { refusalFor, withOwnerAuth, type ConnectionLike } from '../../src/host/host-auth.ts'
 import { makeRequest, makeResponse } from '../support/fake-http.ts'
 
 /** A connection service that admits the owner. */
-const OWNER: ConnectionLike = { admit: () => ({ peer: { principal: { kind: 'owner' } } }) }
+const OWNER: ConnectionLike = { requestRejection: () => undefined, admit: () => ({ peer: { principal: { kind: 'owner' } } }) }
 
 /** A connection service that admits a non-owner principal. */
-const GUEST: ConnectionLike = { admit: () => ({ peer: { principal: { kind: 'guest' } } }) }
+const GUEST: ConnectionLike = { requestRejection: () => undefined, admit: () => ({ peer: { principal: { kind: 'guest' } } }) }
 
 /** A connection service that rejects outright. */
-const REJECTING: ConnectionLike = { admit: () => ({ rejection: 401 as const }) }
+const REJECTING: ConnectionLike = { requestRejection: () => undefined, admit: () => ({ rejection: 401 as const }) }
 
 /** A request the host itself would make from its own page. */
 function loopbackRequest(overrides: { host?: string; origin?: string } = {}) {
@@ -130,5 +130,41 @@ describe('withOwnerAuth', () => {
     })(loopbackRequest(), res)
     expect(recorded.status).toBe(500)
     expect(recorded.body).toEqual({ error: 'internal-error', message: 'unknown error' })
+  })
+})
+
+
+describe('synchronous Host admission contract', () => {
+  it('runs the Host policy first and passes through only valid rejections', () => {
+    const admit = vi.fn(OWNER.admit!)
+    for (const [answer, status] of [[401, 401], [403, 403], [null, 403], [false, 403], [0, 403], [200, 403], [{}, 403]]) {
+      expect(refusalFor(loopbackRequest(), { requestRejection: () => answer, admit })).toBe(status)
+    }
+    expect(admit).not.toHaveBeenCalled()
+    expect(refusalFor(loopbackRequest(), { admit })).toBe(401)
+    expect(refusalFor(loopbackRequest(), { requestRejection: () => undefined })).toBe(401)
+    expect(refusalFor(loopbackRequest(), { requestRejection: () => { throw new Error('broken Host policy') }, admit })).toBe(403)
+  })
+
+  it('rejects asynchronous policies and malformed owner results without reading bodies or running handlers', async () => {
+    const bodyRead = vi.fn(() => { throw new Error('must not read body') })
+    const req = Object.assign(loopbackRequest(), { on: bodyRead, [Symbol.asyncIterator]: bodyRead })
+    const handler = vi.fn()
+    for (const make of [() => Promise.resolve(undefined), () => Promise.reject(new Error('async policy')), () => ({ then: (_ok: unknown, reject: (e: Error) => void) => reject(new Error('thenable policy')) })]) {
+      const admit = vi.fn(OWNER.admit!)
+      const response = makeResponse()
+      await withOwnerAuth({ get: () => ({ requestRejection: make, admit }) }, handler)(req, response.res)
+      expect(response.recorded.status).toBe(403)
+      expect(admit).not.toHaveBeenCalled()
+    }
+    for (const make of [() => undefined, () => null, () => ({}), () => ({ rejection: undefined }), () => ({ rejection: 200 }), () => ({ peer: {} }), () => Promise.reject(new Error('async owner'))]) {
+      const response = makeResponse()
+      const connection = { requestRejection: () => undefined, admit: make } as unknown as ConnectionLike
+      await withOwnerAuth({ get: () => connection }, handler)(req, response.res)
+      expect(response.recorded.status).toBe(403)
+    }
+    expect(bodyRead).not.toHaveBeenCalled()
+    expect(handler).not.toHaveBeenCalled()
+    await new Promise(resolve => setImmediate(resolve))
   })
 })

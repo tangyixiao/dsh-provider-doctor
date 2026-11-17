@@ -91,7 +91,7 @@ function fakeService(overrides: Partial<DiagnosticService> = {}): { service: Dia
 function fakeHost(): { host: RouteHost; paths: string[]; disposeCount: () => number } {
   const paths: string[] = []
   const disposers: (() => void)[] = []
-  const connection: ConnectionLike = { admit: () => ({ peer: { principal: { kind: 'owner' } } }) }
+  const connection: ConnectionLike = { requestRejection: () => undefined, admit: () => ({ peer: { principal: { kind: 'owner' } } }) }
   const host: RouteHost = {
     get: () => connection,
     webServer: {
@@ -228,7 +228,7 @@ describe('diagnose and connect routes', () => {
   it('does not run when admission fails', async () => {
     const routes = new Map<string, (req: never, res: never) => unknown>()
     const denied: RouteHost = {
-      get: () => ({ admit: () => ({ peer: { principal: { kind: 'guest' } } }) }),
+      get: () => ({ requestRejection: () => undefined, admit: () => ({ peer: { principal: { kind: 'guest' } } }) }),
       webServer: {
         register: (route) => {
           routes.set(route.path, route.handler as unknown as (req: never, res: never) => unknown)

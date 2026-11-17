@@ -2,7 +2,7 @@
   "name": "dsh-provider-doctor",
   "displayName": "DSH Provider Doctor",
   "description": "Diagnose why a model provider is unavailable in DeepSeek Harness: host, plugin, registration, client, credentials and catalog evidence in one read-only report.",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "keywords": [
     "dsh-plugin",
     "deepseek-harness",
@@ -53,7 +53,7 @@
     "assets/NOTICE.md",
     "assets/LICENSE-WHALE-ARTWORK",
     "docs/assets",
-    "docs/release-notes-0.1.9.md"
+    "docs/release-notes-0.1.10.md"
   ],
   "license": "MIT",
   "dsh": {
