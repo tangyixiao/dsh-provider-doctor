@@ -7,14 +7,16 @@
  * credential *metadata*, so a route reachable by anything other than the local
  * signed-in owner would be a disclosure bug rather than a convenience.
  *
- * Three gates, in order:
+ * Admission gates, in order:
  *
- * 1. **Origin.** When the browser sends an `Origin`, it must be loopback: this
+ * 1. **Host policy.** `requestRejection` applies the configured Host/Origin and
+ *    authentication fence before any local checks or owner lookup.
+ * 2. **Origin.** When the browser sends an `Origin`, it must be loopback: this
  *    blocks a page on the open internet from driving the local doctor through
  *    the user's browser.
- * 2. **Host.** The `Host` header must name a loopback authority, so a rebound
+ * 3. **Host.** The `Host` header must name a loopback authority, so a rebound
  *    DNS name cannot reach the port.
- * 3. **Principal.** The connection service must admit the request as the
+ * 4. **Principal.** The connection service must admit the request as the
  *    `owner` principal. An unauthenticated or foreign caller gets 401/403.
  *
  * Every response, including errors, is `no-store`: a cached diagnosis would
@@ -28,7 +30,8 @@ import { hostIsLoopback, originIsLoopback } from './loopback.ts'
 
 /** The narrowly-typed slice of the `connection` service used here. */
 export interface ConnectionLike {
-  admit(request: IncomingMessage):
+  requestRejection?(request: IncomingMessage): unknown
+  admit?(request: IncomingMessage):
     | { peer: { principal: { kind: string } } }
     | { rejection: 401 | 403 }
 }
@@ -59,12 +62,23 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
  * @returns The status to refuse with, or `undefined` to proceed.
  */
 export function refusalFor(req: IncomingMessage, connection: ConnectionLike | undefined): 401 | 403 | undefined {
-  if (!hostIsLoopback(req.headers.host)) return 403
-  if (!originIsLoopback(req.headers.origin)) return 403
-  if (connection === undefined) return 401
-  const admission = connection.admit(req)
-  if ('rejection' in admission) return admission.rejection
-  return admission.peer.principal.kind === 'owner' ? undefined : 403
+  try {
+    if (connection == null || typeof connection.requestRejection !== 'function' || typeof connection.admit !== 'function') return 401
+    const rejection = connection.requestRejection(req)
+    if (rejection !== undefined) {
+      void Promise.resolve(rejection).catch(() => {})
+      return rejection === 401 ? 401 : 403
+    }
+    if (!hostIsLoopback(req.headers.host)) return 403
+    if (!originIsLoopback(req.headers.origin)) return 403
+    const admission = connection.admit(req)
+    void Promise.resolve(admission).catch(() => {})
+    if (admission == null || typeof admission !== 'object' || 'then' in admission) return 403
+    if ('rejection' in admission) return admission.rejection === 401 ? 401 : 403
+    return admission.peer?.principal?.kind === 'owner' ? undefined : 403
+  } catch {
+    return 403
+  }
 }
 
 /**
@@ -84,8 +98,8 @@ export function withOwnerAuth(
   handler: (req: IncomingMessage, res: ServerResponse) => void | Promise<void>,
 ): (req: IncomingMessage, res: ServerResponse) => Promise<void> {
   return async (req, res) => {
-    const connection = ctx.get('connection')
-    const refusal = refusalFor(req, connection)
+    let refusal: 401 | 403 | undefined
+    try { refusal = refusalFor(req, ctx.get('connection')) } catch { refusal = 403 }
     if (refusal !== undefined) {
       res.setHeader('Cache-Control', 'no-store')
       sendJson(res, refusal, { error: refusal === 401 ? 'unauthorized' : 'forbidden' })
